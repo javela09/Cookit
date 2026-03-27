@@ -1,0 +1,30 @@
+{
+  "name": "cookit",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/javela09/Cookit.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/javela09/Cookit/issues"
+  },
+  "homepage": "https://github.com/javela09/Cookit#readme",
+  "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
+    "@netlify/functions": "^5.1.5",
+    "bcryptjs": "^3.0.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "netlify-cli": "^24.5.0"
+  }
+}

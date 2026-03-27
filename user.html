@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Panel de usuario de Cookit.">
+  <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/styles.css">
+  <title>Cookit | Usuario</title>
+</head>
+
+<body class="userPage">
+  <!-- Cabecera general -->
+  <header>
+    <div class="container">
+      <a href="index.html"><img class="headerLogo" src="img/cookitLogoH.png" alt="Logotipo de Cookit"></a>
+      <nav class="navBar">
+        <a href="index.html">Inicio</a>
+        <a href="recipes.html">Recetas</a>
+        <button class="navTextButton" id="userButton" type="button">Login</button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Panel de usuario con control de cuenta y recetas -->
+  <main>
+    <div class="container">
+      <section class="userPanel">
+        <div class="userInfo">
+          <h2>Panel de control</h2>
+          <p class="sectionLead">Gestiona tus datos y seguridad.</p>
+          <div class="formField">
+            <label for="usernameField">Nombre de usuario</label>
+            <input id="usernameField" type="text" readonly>
+          </div>
+          <div class="formField">
+            <label for="emailField">Correo electronico</label>
+            <input id="emailField" type="email" placeholder="Tu correo">
+            <button class="secondaryButton smallButton" id="updateEmail">Actualizar correo</button>
+          </div>
+          <div class="formField">
+            <label for="passwordField">Cambiar contraseña</label>
+            <input id="passwordField" type="password" placeholder="Nueva contraseña">
+            <button class="primaryButton smallButton" id="updatePassword">Guardar contraseña</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="userRecipes">
+        <div class="sectionHeader">
+          <h2>Mis recetas</h2>
+          <a class="primaryButton" href="newrecipe.html">Nueva receta</a>
+          <p class="sectionLead">Todo lo que has publicado.</p>
+        </div>
+        <div class="recipesScroller" id="myRecipes"></div>
+      </section>
+
+      <section class="savedRecipes">
+        <div class="sectionHeader">
+          <h2>Recetas guardadas</h2>
+          <p class="sectionLead">Tus favoritas de otros usuarios.</p>
+        </div>
+        <div class="recipesScroller" id="savedRecipes"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Pie de página -->
+  <footer>
+    <div class="container">
+      <div class="footerLegalInfo">
+        <h4>Informacion Legal</h4>
+        <ul>
+          <li><a href="">FAQS</a></li>
+          <li><a href="">Aviso Legal</a></li>
+        </ul>
+      </div>
+      <div class="footerContactInfo">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="">info@cookit.com</a></li>
+          <li><a href="">+34 666554433</a></li>
+        </ul>
+      </div>
+      <div class="imgSection">
+        <img src="img/cookitLogoV.png" alt="Logotipo de Cookit.">
+      </div>
+    </div>
+    <div class="footerCredits">
+      <p>&copy; 2025 Todos los derechos reservados</p>
+    </div>
+  </footer>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

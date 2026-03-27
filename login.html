@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Accede o regístrate en Cookit.">
+  <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="css/styles.css">
+  <title>Cookit | Login</title>
+</head>
+
+<body class="loginPage">
+  <!-- Cabecera solo con logo -->
+  <header class="loginHeader">
+    <div class="container logoCenter">
+      <a href="index.html"><img class="headerLogo" src="img/cookitLogoH.png" alt="Logotipo de Cookit"></a>
+    </div>
+  </header>
+
+  <!-- Panel de autenticación -->
+  <main>
+    <div class="container">
+      <section class="authPanel">
+        <div class="authForms">
+          <h2 id="authTitle">Acceso</h2>
+          <p class="sectionLead">Inicia sesión o crea tu cuenta para publicar, guardar y votar recetas.</p>
+          <div class="formField">
+            <label for="authUsername">Usuario</label>
+            <input id="authUsername" type="text" placeholder="Tu nombre de usuario">
+          </div>
+          <div class="formField">
+            <label for="authEmail">Correo electrónico</label>
+            <input id="authEmail" type="email" placeholder="email@ejemplo.com">
+          </div>
+          <div class="formField">
+            <label for="authPassword">Contraseña</label>
+            <input id="authPassword" type="password" placeholder="Contraseña">
+          </div>
+          <div class="authActions">
+            <button class="primaryButton" id="loginSubmit">Login</button>
+            <button class="secondaryButton" id="registerSubmit">Registrar</button>
+          </div>
+          <p id="authFeedback" class="authFeedback" aria-live="polite"></p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Pie de página -->
+  <footer>
+    <div class="container">
+      <div class="footerLegalInfo">
+        <h4>Informacion Legal</h4>
+        <ul>
+          <li><a href="">FAQS</a></li>
+          <li><a href="">Aviso Legal</a></li>
+        </ul>
+      </div>
+      <div class="footerContactInfo">
+        <h4>Contacto</h4>
+        <ul>
+          <li><a href="">info@cookit.com</a></li>
+          <li><a href="">+34 666554433</a></li>
+        </ul>
+      </div>
+      <div class="imgSection">
+        <img src="img/cookitLogoV.png" alt="Logotipo de Cookit.">
+      </div>
+    </div>
+    <div class="footerCredits">
+      <p>&copy; 2025 Todos los derechos reservados</p>
+    </div>
+  </footer>
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
