@@ -599,6 +599,149 @@ body.userPage main .container {
   color: #333;
 }
 
+/*---------------------- RECIPE COMMENTS ------------------*/
+
+.recipeComments {
+  grid-column: 1 / span 12;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.recipeComments h3 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.4rem;
+  color: #1d1d1d;
+}
+
+.commentForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+}
+
+.commentForm label {
+  font-family: var(--font-secondary);
+  font-size: 0.95rem;
+  color: #4a4a4a;
+}
+
+.commentForm textarea,
+.inlineCommentForm textarea {
+  min-height: 110px;
+  padding: 0.65rem 0.85rem;
+  border-radius: 0;
+  border: 1px solid #d9e0c4;
+  font-family: var(--font-secondary);
+  font-size: 0.95rem;
+  background: #fff;
+  resize: vertical;
+}
+
+.commentFeedback {
+  margin: 0;
+  min-height: 1.2rem;
+  font-family: var(--font-secondary);
+  font-size: 0.95rem;
+}
+
+.commentFeedback.isError,
+.inlineCommentFeedback.isError {
+  color: #7b1e1e;
+}
+
+.commentFeedback.isSuccess,
+.inlineCommentFeedback.isSuccess {
+  color: #2f3a18;
+}
+
+.commentsList {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.85rem;
+}
+
+.commentItem {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  padding: 0.9rem;
+  border: 1px solid #d9e0c4;
+  background: #fff;
+}
+
+.commentItem.isReply {
+  margin-left: 1.25rem;
+  border-left: 3px solid #d9e0c4;
+}
+
+.commentItem.isDeleted {
+  background: #f4f4f4;
+}
+
+.commentHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: baseline;
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+  color: #4a4a4a;
+}
+
+.commentHeader strong {
+  color: #1f1f1f;
+  font-weight: 700;
+}
+
+.commentBody {
+  margin: 0;
+  font-family: var(--font-secondary);
+  font-size: 0.95rem;
+  color: #2d2d2d;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.commentActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.commentActionBtn {
+  min-width: 110px;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.inlineCommentHost {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.inlineCommentForm {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px dashed #cbd7ad;
+  background: #f8fbf0;
+}
+
+.inlineCommentFeedback {
+  margin: 0;
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+}
+
+.commentChildren {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
 /*---------------------- NEW RECIPE -----------------------*/
 
 .newRecipeForm {
@@ -929,7 +1072,8 @@ footer .imgSection img {
   .detailMetaRow,
   .pagination,
   .newRecipeActions,
-  .authActions {
+  .authActions,
+  .commentActions {
     flex-direction: column;
     align-items: stretch;
   }
@@ -971,6 +1115,10 @@ footer .imgSection img {
   .newRecipeActions .primaryButton,
   .authActions .primaryButton,
   .authActions .secondaryButton,
+  .commentActions .primaryButton,
+  .commentActions .secondaryButton,
+  .commentActions .ghostButton,
+  .commentActions .dangerButton,
   .tileActions .secondaryButton,
   .tileActions .ghostButton,
   .pagination .ghostButton {

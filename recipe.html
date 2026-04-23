@@ -51,6 +51,23 @@
           </div>
         </div>
       </section>
+      <section class="recipeComments" aria-labelledby="commentsTitle">
+        <h3 id="commentsTitle">Comentarios</h3>
+        <form class="commentForm" id="mainCommentForm">
+          <label for="mainCommentInput">Escribe un comentario</label>
+          <textarea
+            id="mainCommentInput"
+            maxlength="1000"
+            required
+            placeholder="Comparte tu opinion o una duda sobre la receta..."
+          ></textarea>
+          <div class="commentActions">
+            <button type="submit" class="primaryButton">Publicar comentario</button>
+          </div>
+        </form>
+        <p class="commentFeedback" id="commentFeedback" aria-live="polite"></p>
+        <div class="commentsList" id="commentsList"></div>
+      </section>
     </div>
   </main>
 

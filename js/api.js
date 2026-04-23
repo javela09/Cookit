@@ -1,10 +1,16 @@
 async function api(path, options = {}) {
+  const isFormData = options.body instanceof FormData;
+  const headers = {
+    ...(options.headers || {})
+  };
+
+  if (!isFormData && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(path, {
     credentials: "include",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    },
+    headers,
     ...options
   });
 
@@ -15,7 +21,10 @@ async function api(path, options = {}) {
   const data = isJson ? await response.json() : null;
 
   if (!response.ok) {
-    throw new Error(data?.error || "Error de API");
+    const error = new Error(data?.error || "Error de API");
+    error.details = data?.details || null;
+    error.status = response.status;
+    throw error;
   }
 
   return data;
