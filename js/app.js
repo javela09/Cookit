@@ -18,32 +18,39 @@
 
   // Obtiene el nombre de la página actual para decidir qué datos cargar.
   function getPageName() {
-    return window.location.pathname.split("/").pop().toLowerCase() || "index.html";
+    const path = window.location.pathname.toLowerCase().replace(/\/+$/, "");
+    const name = path.split("/").pop() || "index";
+    return name.endsWith(".html") ? name.slice(0, -5) : name;
   }
 
   // Indica si la página actual es el formulario de autenticación.
   function isLoginPage() {
-    return getPageName() === "login.html";
+    return getPageName() === "login";
   }
 
   // Indica si la página actual es la portada.
   function isHomePage() {
-    return getPageName() === "index.html";
+    return getPageName() === "index";
   }
 
   // Indica si la página actual muestra el listado completo.
   function isRecipesPage() {
-    return getPageName() === "recipes.html";
+    return getPageName() === "recipes";
   }
 
   // Indica si la página actual muestra una receta concreta.
   function isRecipeDetailPage() {
-    return getPageName() === "recipe.html";
+    return getPageName() === "recipe";
   }
 
   // Indica si la página actual muestra el panel de usuario.
   function isUserPage() {
-    return getPageName() === "user.html";
+    return getPageName() === "user";
+  }
+
+  // Comprueba si existe un bloque concreto en el DOM.
+  function hasElement(id) {
+    return Boolean(document.getElementById(id));
   }
 
   // Formatea una fecha como día, mes y año.
@@ -1300,11 +1307,11 @@
     if (!isLoginPage() && state.user) {
       const recipeId = getCurrentRecipeId();
 
-      if (isHomePage()) {
+      if (isHomePage() || hasElement("bestValuedList")) {
         await loadRecipes({ mode: "home" });
-      } else if (isRecipeDetailPage()) {
+      } else if (isRecipeDetailPage() || hasElement("recipeDetail")) {
         await loadRecipeDetail(recipeId);
-      } else if (isRecipesPage() || isUserPage()) {
+      } else if (isRecipesPage() || isUserPage() || hasElement("recipesGrid") || hasElement("myRecipes")) {
         await loadRecipes();
       }
 
