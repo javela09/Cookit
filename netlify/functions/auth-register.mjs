@@ -8,6 +8,7 @@ const schema = z.object({
   password: z.string().min(6).max(100)
 });
 
+// Registra un usuario nuevo tras validar duplicados y contraseña.
 export default async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Método no permitido" }), {

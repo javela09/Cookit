@@ -2,18 +2,22 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { sql } from "./db.mjs";
 
+// Genera el hash seguro de una contraseña.
 export async function hashPassword(password) {
   return bcrypt.hash(password, 10);
 }
 
+// Comprueba una contraseña contra su hash almacenado.
 export async function verifyPassword(password, hash) {
   return bcrypt.compare(password, hash);
 }
 
+// Crea un token aleatorio para sesiones persistentes.
 export function createSessionToken() {
   return crypto.randomBytes(32).toString("hex");
 }
 
+// Convierte la cabecera Cookie en un objeto consultable.
 export function parseCookies(req) {
   const raw = req.headers.get("cookie") || "";
 
@@ -29,6 +33,7 @@ export function parseCookies(req) {
   );
 }
 
+// Recupera el usuario asociado a la cookie de sesión vigente.
 export async function getCurrentUser(req) {
   const cookies = parseCookies(req);
   const token = cookies.session_token;

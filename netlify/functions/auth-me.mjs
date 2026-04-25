@@ -1,5 +1,6 @@
 import { getCurrentUser } from "./_lib/auth.mjs";
 
+// Devuelve el usuario autenticado asociado a la cookie actual.
 export default async (req) => {
   const user = await getCurrentUser(req);
 

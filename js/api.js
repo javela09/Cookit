@@ -1,3 +1,4 @@
+// Centraliza las llamadas HTTP y normaliza los errores de la API.
 async function api(path, options = {}) {
   const isFormData = options.body instanceof FormData;
   const headers = {

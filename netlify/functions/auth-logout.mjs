@@ -1,6 +1,7 @@
 import { sql } from "./_lib/db.mjs";
 import { parseCookies } from "./_lib/auth.mjs";
 
+// Elimina la sesión activa y limpia la cookie del navegador.
 export default async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Método no permitido" }), {

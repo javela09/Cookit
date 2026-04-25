@@ -1,4 +1,4 @@
-// Cookit interactions and state management (vanilla JS + Neon APIs)
+// Gestiona la interacción de Cookit con JavaScript plano y APIs en Neon.
 (function () {
   const PAGE_SIZE = 12;
   const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
@@ -16,8 +16,37 @@
     search: ""
   };
 
-  const isLoginPage = () => window.location.pathname.toLowerCase().includes("login.html");
+  // Obtiene el nombre de la página actual para decidir qué datos cargar.
+  function getPageName() {
+    return window.location.pathname.split("/").pop().toLowerCase() || "index.html";
+  }
 
+  // Indica si la página actual es el formulario de autenticación.
+  function isLoginPage() {
+    return getPageName() === "login.html";
+  }
+
+  // Indica si la página actual es la portada.
+  function isHomePage() {
+    return getPageName() === "index.html";
+  }
+
+  // Indica si la página actual muestra el listado completo.
+  function isRecipesPage() {
+    return getPageName() === "recipes.html";
+  }
+
+  // Indica si la página actual muestra una receta concreta.
+  function isRecipeDetailPage() {
+    return getPageName() === "recipe.html";
+  }
+
+  // Indica si la página actual muestra el panel de usuario.
+  function isUserPage() {
+    return getPageName() === "user.html";
+  }
+
+  // Formatea una fecha como día, mes y año.
   function formatDate(dateStr) {
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) return "";
@@ -27,6 +56,7 @@
     return `${dd}/${mm}/${yyyy}`;
   }
 
+  // Formatea una fecha ISO incluyendo hora y minutos.
   function formatDateTime(dateStr) {
     const date = new Date(dateStr);
     if (Number.isNaN(date.getTime())) return "";
@@ -36,12 +66,14 @@
     return `${base} ${hh}:${mm}`;
   }
 
+  // Convierte un valor numérico en texto de minutos.
   function formatMinutes(value) {
     const minutes = Number(value);
     if (!Number.isFinite(minutes) || minutes <= 0) return "";
     return `${minutes} min`;
   }
 
+  // Divide texto multilínea en elementos limpios.
   function splitLines(value) {
     return String(value || "")
       .split("\n")
@@ -49,15 +81,18 @@
       .filter(Boolean);
   }
 
+  // Lee el identificador de receta desde la URL.
   function getCurrentRecipeId() {
     const params = new URLSearchParams(window.location.search);
     return params.get("id");
   }
 
+  // Busca una receta cargada en memoria por su identificador.
   function getRecipeById(id) {
     return state.recipes.find(recipe => recipe.id === id) || null;
   }
 
+  // Obliga a tener sesión antes de ejecutar acciones privadas.
   function requireUser() {
     if (!state.user) {
       window.location.href = "login.html";
@@ -66,6 +101,7 @@
     return true;
   }
 
+  // Registra un usuario nuevo en la API.
   async function registerUser(username, email, password) {
     return window.api("/api/auth/register", {
       method: "POST",
@@ -73,6 +109,7 @@
     });
   }
 
+  // Inicia sesión con correo y contraseña.
   async function loginUser(email, password) {
     return window.api("/api/auth/login", {
       method: "POST",
@@ -80,6 +117,7 @@
     });
   }
 
+  // Recupera la sesión actual si existe.
   async function loadCurrentUser() {
     try {
       return await window.api("/api/auth/me");
@@ -88,12 +126,14 @@
     }
   }
 
+  // Cierra la sesión activa en el backend.
   async function logoutUser() {
     return window.api("/api/auth/logout", {
       method: "POST"
     });
   }
 
+  // Actualiza el correo del usuario autenticado.
   async function updateUserEmail(email) {
     return window.api("/api/user/email", {
       method: "PUT",
@@ -101,6 +141,7 @@
     });
   }
 
+  // Actualiza la contraseña del usuario autenticado.
   async function updateUserPassword(password) {
     return window.api("/api/user/password", {
       method: "PUT",
@@ -108,6 +149,7 @@
     });
   }
 
+  // Inicializa el estado local de sesión.
   async function initSession() {
     const user = await loadCurrentUser();
     state.user = user
@@ -119,6 +161,7 @@
       : null;
   }
 
+  // Redirige fuera de páginas privadas cuando no hay sesión.
   function guardSessionOnEntry() {
     if (isLoginPage()) return;
     if (!state.user) {
@@ -126,9 +169,13 @@
     }
   }
 
-  async function loadRecipes() {
+  // Carga recetas desde la API usando el modo adecuado para cada vista.
+  async function loadRecipes({ mode = "full" } = {}) {
     try {
-      const recipes = await window.api("/api/recipes");
+      const path = mode === "home"
+        ? "/api/recipes?view=summary&order=popular&limit=3"
+        : "/api/recipes";
+      const recipes = await window.api(path);
       state.recipes = Array.isArray(recipes) ? recipes : [];
     } catch (error) {
       console.error("No se pudieron cargar recetas:", error);
@@ -136,6 +183,23 @@
     }
   }
 
+  // Carga solo la receta necesaria para la página de detalle.
+  async function loadRecipeDetail(recipeId) {
+    if (!recipeId) {
+      state.recipes = [];
+      return;
+    }
+
+    try {
+      const recipe = await window.api(`/api/recipes?recipeId=${encodeURIComponent(recipeId)}`);
+      state.recipes = recipe ? [recipe] : [];
+    } catch (error) {
+      console.error("No se pudo cargar la receta:", error);
+      state.recipes = [];
+    }
+  }
+
+  // Carga los comentarios de una receta concreta.
   async function loadComments(recipeId) {
     if (!recipeId) {
       state.comments = [];
@@ -157,6 +221,7 @@
     }
   }
 
+  // Cierra sesión local y remota, y vuelve al login.
   async function logout() {
     try {
       await logoutUser();
@@ -167,6 +232,7 @@
     window.location.href = "login.html";
   }
 
+  // Pinta el botón de usuario según la sesión.
   function renderHeaderUser() {
     const btn = document.getElementById("userButton");
     if (!btn) return;
@@ -192,6 +258,7 @@
     };
   }
 
+  // Añade el menú flotante de logout al botón de usuario.
   function attachLogoutMenu(btn) {
     let menu = document.getElementById("logoutMenu");
     if (!menu) {
@@ -209,6 +276,7 @@
       document.body.appendChild(menu);
     }
 
+    // Posiciona el menú junto al botón de usuario.
     const showMenu = () => {
       const rect = btn.getBoundingClientRect();
       menu.style.top = `${rect.bottom + window.scrollY + 6}px`;
@@ -218,6 +286,7 @@
       menu.style.left = `${rect.right + window.scrollX - menuWidth}px`;
     };
 
+    // Oculta el menú cuando el clic queda fuera.
     const hideMenu = event => {
       if (!menu.contains(event.target) && event.target !== btn) {
         menu.classList.remove("open");
@@ -240,10 +309,12 @@
     }
   }
 
+  // Navega al detalle de una receta.
   function goToDetail(id) {
     window.location.href = `recipe.html?id=${encodeURIComponent(id)}`;
   }
 
+  // Renderiza las recetas mejor valoradas en portada.
   function renderBestValued() {
     const container = document.getElementById("bestValuedList");
     if (!container) return;
@@ -279,6 +350,7 @@
     });
   }
 
+  // Aplica búsqueda, filtros, ordenación y paginación al listado.
   function applyFiltersAndRender() {
     const grid = document.getElementById("recipesGrid");
     if (!grid) return;
@@ -362,6 +434,7 @@
     renderPagination(totalPages);
   }
 
+  // Renderiza los controles de paginación del listado.
   function renderPagination(totalPages) {
     const pagination = document.getElementById("pagination");
     const prevBtn = document.getElementById("prevPage");
@@ -399,6 +472,7 @@
     };
   }
 
+  // Alterna el estado de guardado de una receta.
   async function toggleSave(recipeId) {
     if (!requireUser()) return;
 
@@ -416,6 +490,7 @@
     }
   }
 
+  // Alterna el voto de una receta y actualiza el contador local.
   async function voteRecipe(recipeId) {
     if (!requireUser()) return;
 
@@ -436,6 +511,7 @@
     }
   }
 
+  // Elimina de forma lógica una receta publicada por el usuario.
   async function deletePublished(recipeId) {
     if (!requireUser()) return;
 
@@ -458,6 +534,7 @@
     }
   }
 
+  // Quita una receta de la lista de guardadas.
   async function deleteSaved(recipeId) {
     if (!requireUser()) return;
     const recipe = getRecipeById(recipeId);
@@ -465,6 +542,7 @@
     await toggleSave(recipeId);
   }
 
+  // Construye una tarjeta del panel de usuario.
   function createUserRecipeCard(recipe, isMine) {
     const card = document.createElement("article");
     card.className = "userRecipeCard";
@@ -495,6 +573,7 @@
     return card;
   }
 
+  // Renderiza recetas propias, guardadas y datos de perfil.
   function renderUserLists() {
     const myContainer = document.getElementById("myRecipes");
     const savedContainer = document.getElementById("savedRecipes");
@@ -528,6 +607,7 @@
     }
   }
 
+  // Renderiza la información principal de una receta.
   function renderRecipeDetail() {
     const detail = document.getElementById("recipeDetail");
     if (!detail) return null;
@@ -593,6 +673,7 @@
     return recipe;
   }
 
+  // Determina si un comentario fue editado tras crearse.
   function hasCommentBeenEdited(comment) {
     const created = new Date(comment.createdAt);
     const updated = new Date(comment.updatedAt);
@@ -600,6 +681,7 @@
     return updated.getTime() - created.getTime() > 1000;
   }
 
+  // Muestra mensajes generales del sistema de comentarios.
   function showCommentFeedback(message, isError = true) {
     const feedback = document.getElementById("commentFeedback");
     if (!feedback) return;
@@ -608,6 +690,7 @@
     feedback.classList.toggle("isSuccess", Boolean(message && !isError));
   }
 
+  // Crea un mensaje de feedback para formularios inline.
   function createInlineFeedback(message, isError = true) {
     const feedback = document.createElement("p");
     feedback.className = "inlineCommentFeedback";
@@ -617,6 +700,7 @@
     return feedback;
   }
 
+  // Actualiza o crea el feedback de un formulario inline.
   function setInlineFormFeedback(form, message, isError = true) {
     let feedback = form.querySelector(".inlineCommentFeedback");
     if (!feedback) {
@@ -628,6 +712,7 @@
     feedback.classList.toggle("isSuccess", !isError);
   }
 
+  // Agrupa comentarios por comentario padre para renderizar respuestas.
   function buildCommentChildrenMap() {
     const map = new Map();
     state.comments.forEach(comment => {
@@ -638,6 +723,7 @@
     return map;
   }
 
+  // Crea el formulario inline de respuesta o edición.
   function createInlineForm(comment, mode) {
     const form = document.createElement("form");
     form.className = "inlineCommentForm";
@@ -672,6 +758,7 @@
     return form;
   }
 
+  // Crea un nodo visual de comentario con sus acciones.
   function createCommentItem(comment, childrenMap, depth = 0) {
     const item = document.createElement("article");
     item.className = "commentItem";
@@ -749,6 +836,7 @@
     return item;
   }
 
+  // Renderiza el árbol completo de comentarios.
   function renderComments() {
     const list = document.getElementById("commentsList");
     if (!list) return;
@@ -767,6 +855,7 @@
     });
   }
 
+  // Publica un comentario o respuesta y refresca la lista.
   async function postComment({ recipeId, content, parentCommentId = null }) {
     const payload = {
       recipeId,
@@ -787,6 +876,7 @@
     renderComments();
   }
 
+  // Edita un comentario propio y refresca la lista.
   async function editComment({ recipeId, commentId, content }) {
     const comments = await window.api("/api/recipe-comments", {
       method: "PUT",
@@ -798,6 +888,7 @@
     renderComments();
   }
 
+  // Elimina lógicamente un comentario propio y refresca la lista.
   async function deleteComment({ recipeId, commentId }) {
     const comments = await window.api("/api/recipe-comments", {
       method: "DELETE",
@@ -809,6 +900,7 @@
     renderComments();
   }
 
+  // Vincula el formulario principal de comentarios.
   function bindMainCommentForm() {
     const form = document.getElementById("mainCommentForm");
     if (!form || form.dataset.bound) return;
@@ -842,6 +934,7 @@
     });
   }
 
+  // Abre o cierra un formulario inline para responder o editar.
   function openInlineCommentForm(commentId, mode) {
     const comment = state.comments.find(item => item.id === commentId);
     if (!comment) return;
@@ -863,6 +956,7 @@
     host.appendChild(createInlineForm(comment, mode));
   }
 
+  // Vincula acciones delegadas de comentarios y formularios inline.
   function bindCommentsListInteractions() {
     const list = document.getElementById("commentsList");
     if (!list || list.dataset.bound) return;
@@ -942,6 +1036,7 @@
     });
   }
 
+  // Vincula el botón de filtros del listado.
   function bindFilters() {
     const applyBtn = document.querySelector(".filtersBar .primaryButton");
     if (!applyBtn || applyBtn.dataset.bound) return;
@@ -954,6 +1049,7 @@
     };
   }
 
+  // Vincula las acciones del panel de usuario.
   function bindUserPanel() {
     const updateEmailBtn = document.getElementById("updateEmail");
     const updatePasswordBtn = document.getElementById("updatePassword");
@@ -1003,6 +1099,7 @@
     }
   }
 
+  // Vincula los botones de login y registro.
   function bindAuthForms() {
     const loginBtn = document.getElementById("loginSubmit");
     const registerBtn = document.getElementById("registerSubmit");
@@ -1024,6 +1121,7 @@
     }
   }
 
+  // Lee los campos del formulario de autenticación.
   function getAuthFields() {
     const username = document.getElementById("authUsername")?.value.trim() || "";
     const email = document.getElementById("authEmail")?.value.trim() || "";
@@ -1031,6 +1129,7 @@
     return { username, email, password };
   }
 
+  // Muestra mensajes del formulario de autenticación.
   function showAuthFeedback(message, isError = true) {
     const feedback = document.getElementById("authFeedback");
     if (!feedback) return;
@@ -1038,6 +1137,7 @@
     feedback.textContent = message;
   }
 
+  // Gestiona el estado visual de la página de autenticación.
   function renderAuthPage() {
     const title = document.getElementById("authTitle");
     if (!title) return;
@@ -1051,6 +1151,7 @@
     }
   }
 
+  // Procesa el envío de login.
   async function handleLogin() {
     const { email, password } = getAuthFields();
 
@@ -1076,6 +1177,7 @@
     }
   }
 
+  // Procesa el alta de nuevos usuarios.
   async function handleRegister() {
     const { username, email, password } = getAuthFields();
 
@@ -1097,6 +1199,7 @@
     }
   }
 
+  // Vincula el formulario de creación de receta.
   function bindNewRecipeForm() {
     const form = document.getElementById("newRecipeForm");
     if (!form || form.dataset.bound) return;
@@ -1171,6 +1274,7 @@
     });
   }
 
+  // Refresca todos los bloques visibles de la página actual.
   function renderAll() {
     renderHeaderUser();
     renderBestValued();
@@ -1181,6 +1285,7 @@
     renderAuthPage();
   }
 
+  // Arranca la aplicación cuando el DOM está disponible.
   document.addEventListener("DOMContentLoaded", async () => {
     await initSession();
     guardSessionOnEntry();
@@ -1193,10 +1298,17 @@
     bindCommentsListInteractions();
 
     if (!isLoginPage() && state.user) {
-      await loadRecipes();
-
       const recipeId = getCurrentRecipeId();
-      if (recipeId && getRecipeById(recipeId)) {
+
+      if (isHomePage()) {
+        await loadRecipes({ mode: "home" });
+      } else if (isRecipeDetailPage()) {
+        await loadRecipeDetail(recipeId);
+      } else if (isRecipesPage() || isUserPage()) {
+        await loadRecipes();
+      }
+
+      if (isRecipeDetailPage() && recipeId && getRecipeById(recipeId)) {
         await loadComments(recipeId);
       }
     }

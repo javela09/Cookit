@@ -6,6 +6,7 @@ import { toArray } from "./_lib/domain.mjs";
 
 const jsonHeaders = { "content-type": "application/json" };
 const uuidSchema = z.string().uuid();
+const MAX_SUMMARY_LIMIT = 12;
 
 const recipeSchema = z.object({
   title: z.string().trim().min(1).max(140),
@@ -19,6 +20,7 @@ const recipeSchema = z.object({
 });
 
 class HttpError extends Error {
+  // Representa errores HTTP controlados con estado y detalles opcionales.
   constructor(message, status = 400, details = null) {
     super(message);
     this.status = status;
@@ -26,6 +28,7 @@ class HttpError extends Error {
   }
 }
 
+// Devuelve una respuesta JSON homogénea.
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -33,6 +36,7 @@ function json(data, status = 200) {
   });
 }
 
+// Convierte errores de Zod en detalles seguros para el cliente.
 function zodDetails(error) {
   return error.issues?.map(issue => ({
     path: issue.path.join("."),
@@ -41,6 +45,7 @@ function zodDetails(error) {
   })) || [];
 }
 
+// Normaliza fechas de PostgreSQL a ISO.
 function toIsoDate(value) {
   if (!value) return null;
   if (value instanceof Date) return value.toISOString();
@@ -49,10 +54,12 @@ function toIsoDate(value) {
   return date.toISOString();
 }
 
+// Normaliza listas almacenadas como JSON o texto.
 function toStringArray(value) {
   return toArray(value).map(item => String(item).trim()).filter(Boolean);
 }
 
+// Extrae minutos desde número o texto de formulario.
 function parseTimeMinutes(value) {
   if (value === null || value === undefined) return null;
   if (typeof value === "number" && Number.isFinite(value)) {
@@ -70,6 +77,7 @@ function parseTimeMinutes(value) {
   return Number.NaN;
 }
 
+// Construye una URL válida incluso en entornos de desarrollo.
 function getRequestUrl(req) {
   try {
     return new URL(req.url);
@@ -78,6 +86,7 @@ function getRequestUrl(req) {
   }
 }
 
+// Convierte una fila SQL al contrato público de receta.
 function mapRecipeRow(row) {
   return {
     id: row.id,
@@ -97,6 +106,14 @@ function mapRecipeRow(row) {
   };
 }
 
+// Limita parámetros numéricos de consulta para evitar respuestas grandes.
+function parsePositiveLimit(value, fallback, max) {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
+  return Math.min(parsed, max);
+}
+
+// Normaliza y valida los datos recibidos para crear una receta.
 function normalizeInput(raw, imageUrlOverride) {
   const title = raw.title ?? raw.newTitle ?? "";
   const description = raw.description ?? raw.newDescription ?? "";
@@ -137,6 +154,7 @@ function normalizeInput(raw, imageUrlOverride) {
   return parsed.data;
 }
 
+// Lee una receta enviada como multipart y convierte la imagen a data URL.
 async function parseMultipartRecipe(req) {
   const formData = await req.formData();
   const file = formData.get("imageFile");
@@ -164,6 +182,7 @@ async function parseMultipartRecipe(req) {
   return normalizeInput(payload, imageUrl);
 }
 
+// Lee una receta enviada como JSON.
 async function parseJsonRecipe(req) {
   let body;
 
@@ -176,7 +195,111 @@ async function parseJsonRecipe(req) {
   return normalizeInput(body || {}, null);
 }
 
+// Lista recetas resumidas para portada sin estado personalizado de usuario.
+async function listRecipeSummaries(req) {
+  const url = getRequestUrl(req);
+  const limit = parsePositiveLimit(url.searchParams.get("limit"), 3, MAX_SUMMARY_LIMIT);
+
+  const rows = await sql`
+    select
+      r.id::text as id,
+      r.author_id::text as author_id,
+      u.username as author,
+      r.title,
+      r.description,
+      r.time_minutes,
+      r.image_url,
+      r.categories,
+      null::jsonb as ingredients,
+      null::jsonb as steps,
+      r.created_at,
+      coalesce(v.vote_count, 0)::int as votes,
+      false as saved,
+      false as voted
+    from recipes r
+    join app_users u on u.id = r.author_id
+    left join (
+      select recipe_id, count(*)::int as vote_count
+      from recipe_votes
+      group by recipe_id
+    ) v on v.recipe_id = r.id
+    where r.deleted_at is null
+      and r.is_published = true
+    order by coalesce(v.vote_count, 0) desc, r.created_at desc
+    limit ${limit}
+  `;
+
+  return json(rows.map(mapRecipeRow), 200);
+}
+
+// Obtiene una única receta con el mismo contrato que el listado.
+async function getRecipe(req, recipeId) {
+  const parsedId = uuidSchema.safeParse(recipeId);
+  if (!parsedId.success) {
+    return json(
+      { error: "recipeId invalido", details: zodDetails(parsedId.error) },
+      400
+    );
+  }
+
+  const user = await getCurrentUser(req);
+  const userId = user?.id || null;
+
+  const rows = await sql`
+    select
+      r.id::text as id,
+      r.author_id::text as author_id,
+      u.username as author,
+      r.title,
+      r.description,
+      r.time_minutes,
+      r.image_url,
+      r.categories,
+      r.ingredients,
+      r.steps,
+      r.created_at,
+      coalesce(v.vote_count, 0)::int as votes,
+      case when rs.user_id is null then false else true end as saved,
+      case when rv.user_id is null then false else true end as voted
+    from recipes r
+    join app_users u on u.id = r.author_id
+    left join (
+      select recipe_id, count(*)::int as vote_count
+      from recipe_votes
+      group by recipe_id
+    ) v on v.recipe_id = r.id
+    left join recipe_saves rs
+      on rs.recipe_id = r.id
+     and rs.user_id = ${userId}::uuid
+    left join recipe_votes rv
+      on rv.recipe_id = r.id
+     and rv.user_id = ${userId}::uuid
+    where r.deleted_at is null
+      and r.is_published = true
+      and r.id = ${parsedId.data}::uuid
+    limit 1
+  `;
+
+  if (rows.length === 0) {
+    return json({ error: "Receta no encontrada" }, 404);
+  }
+
+  return json(mapRecipeRow(rows[0]), 200);
+}
+
+// Lista todas las recetas publicadas para vistas que necesitan filtros completos.
 async function listRecipes(req) {
+  const url = getRequestUrl(req);
+  const recipeId = url.searchParams.get("recipeId") || url.searchParams.get("id");
+
+  if (recipeId) {
+    return getRecipe(req, recipeId);
+  }
+
+  if (url.searchParams.get("view") === "summary") {
+    return listRecipeSummaries(req);
+  }
+
   const user = await getCurrentUser(req);
   const userId = user?.id || null;
 
@@ -217,6 +340,7 @@ async function listRecipes(req) {
   return json(rows.map(mapRecipeRow), 200);
 }
 
+// Crea una receta nueva para el usuario autenticado.
 async function createRecipe(req) {
   const user = await getCurrentUser(req);
 
@@ -278,6 +402,7 @@ async function createRecipe(req) {
   return json(recipe, 201);
 }
 
+// Elimina lógicamente una receta propia.
 async function deleteRecipe(req) {
   const user = await getCurrentUser(req);
 
@@ -337,6 +462,7 @@ async function deleteRecipe(req) {
   return json({ ok: true, id: deleted[0].id }, 200);
 }
 
+// Enruta las operaciones disponibles sobre recetas.
 export default async (req) => {
   try {
     if (req.method === "GET") {

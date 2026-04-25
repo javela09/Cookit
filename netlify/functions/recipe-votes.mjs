@@ -7,6 +7,7 @@ const schema = z.object({
   recipeId: z.string().uuid()
 });
 
+// Devuelve una respuesta JSON homogénea.
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -14,6 +15,7 @@ function json(data, status = 200) {
   });
 }
 
+// Convierte errores de Zod en detalles seguros para el cliente.
 function zodDetails(error) {
   return error.issues?.map(issue => ({
     path: issue.path.join("."),
@@ -22,6 +24,7 @@ function zodDetails(error) {
   })) || [];
 }
 
+// Alterna el voto de una receta y devuelve el total actualizado.
 export default async (req) => {
   if (req.method !== "POST") {
     return json({ error: "Metodo no permitido" }, 405);
@@ -43,49 +46,63 @@ export default async (req) => {
 
     const { recipeId } = parsed.data;
 
-    const recipeRows = await sql`
-      select id
-      from recipes
-      where id = ${recipeId}::uuid
-        and deleted_at is null
-        and is_published = true
-      limit 1
+    const rows = await sql`
+      with target_recipe as (
+        select id
+        from recipes
+        where id = ${recipeId}::uuid
+          and deleted_at is null
+          and is_published = true
+        limit 1
+      ),
+      previous_count as (
+        select count(*)::int as votes
+        from recipe_votes
+        where recipe_id = ${recipeId}::uuid
+      ),
+      removed as (
+        delete from recipe_votes v
+        using target_recipe r
+        where v.recipe_id = r.id
+          and v.user_id = ${user.id}::uuid
+        returning v.recipe_id
+      ),
+      inserted as (
+        insert into recipe_votes (recipe_id, user_id)
+        select id, ${user.id}::uuid
+        from target_recipe
+        where not exists (select 1 from removed)
+        on conflict (recipe_id, user_id) do nothing
+        returning recipe_id
+      )
+      select
+        exists(select 1 from target_recipe) as recipe_exists,
+        case
+          when exists(select 1 from removed) then false
+          else exists(select 1 from target_recipe)
+        end as voted,
+        greatest(
+          0,
+          (select votes from previous_count)
+          - case when exists(select 1 from removed) then 1 else 0 end
+          + case
+              when exists(select 1 from target_recipe)
+               and not exists(select 1 from removed) then 1
+              else 0
+            end
+        )::int as votes
     `;
 
-    if (recipeRows.length === 0) {
+    if (!rows[0]?.recipe_exists) {
       return json({ error: "Receta no encontrada" }, 404);
     }
-
-    const removed = await sql`
-      delete from recipe_votes
-      where recipe_id = ${recipeId}::uuid
-        and user_id = ${user.id}::uuid
-      returning recipe_id
-    `;
-
-    let voted = false;
-
-    if (removed.length === 0) {
-      await sql`
-        insert into recipe_votes (recipe_id, user_id)
-        values (${recipeId}::uuid, ${user.id}::uuid)
-        on conflict (recipe_id, user_id) do nothing
-      `;
-      voted = true;
-    }
-
-    const voteRows = await sql`
-      select count(*)::int as votes
-      from recipe_votes
-      where recipe_id = ${recipeId}::uuid
-    `;
 
     return json(
       {
         ok: true,
         recipeId,
-        voted,
-        votes: voteRows[0]?.votes || 0
+        voted: Boolean(rows[0].voted),
+        votes: rows[0]?.votes || 0
       },
       200
     );

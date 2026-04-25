@@ -1,5 +1,6 @@
 import { sql } from "./_lib/db.mjs";
 
+// Comprueba que Neon responde correctamente.
 export default async () => {
   try {
     const result = await sql`select now() as server_time`;

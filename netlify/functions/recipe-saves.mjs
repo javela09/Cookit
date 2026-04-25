@@ -7,6 +7,7 @@ const schema = z.object({
   recipeId: z.string().uuid()
 });
 
+// Devuelve una respuesta JSON homogénea.
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -14,6 +15,7 @@ function json(data, status = 200) {
   });
 }
 
+// Convierte errores de Zod en detalles seguros para el cliente.
 function zodDetails(error) {
   return error.issues?.map(issue => ({
     path: issue.path.join("."),
@@ -22,6 +24,7 @@ function zodDetails(error) {
   })) || [];
 }
 
+// Alterna el guardado de una receta para el usuario autenticado.
 export default async (req) => {
   if (req.method !== "POST") {
     return json({ error: "Metodo no permitido" }, 405);
@@ -43,38 +46,43 @@ export default async (req) => {
 
     const { recipeId } = parsed.data;
 
-    const recipeRows = await sql`
-      select id
-      from recipes
-      where id = ${recipeId}::uuid
-        and deleted_at is null
-        and is_published = true
-      limit 1
+    const rows = await sql`
+      with target_recipe as (
+        select id
+        from recipes
+        where id = ${recipeId}::uuid
+          and deleted_at is null
+          and is_published = true
+        limit 1
+      ),
+      removed as (
+        delete from recipe_saves s
+        using target_recipe r
+        where s.recipe_id = r.id
+          and s.user_id = ${user.id}::uuid
+        returning s.recipe_id
+      ),
+      inserted as (
+        insert into recipe_saves (recipe_id, user_id)
+        select id, ${user.id}::uuid
+        from target_recipe
+        where not exists (select 1 from removed)
+        on conflict (recipe_id, user_id) do nothing
+        returning recipe_id
+      )
+      select
+        exists(select 1 from target_recipe) as recipe_exists,
+        case
+          when exists(select 1 from removed) then false
+          else exists(select 1 from target_recipe)
+        end as saved
     `;
 
-    if (recipeRows.length === 0) {
+    if (!rows[0]?.recipe_exists) {
       return json({ error: "Receta no encontrada" }, 404);
     }
 
-    const removed = await sql`
-      delete from recipe_saves
-      where recipe_id = ${recipeId}::uuid
-        and user_id = ${user.id}::uuid
-      returning recipe_id
-    `;
-
-    let saved = false;
-
-    if (removed.length === 0) {
-      await sql`
-        insert into recipe_saves (recipe_id, user_id)
-        values (${recipeId}::uuid, ${user.id}::uuid)
-        on conflict (recipe_id, user_id) do nothing
-      `;
-      saved = true;
-    }
-
-    return json({ ok: true, recipeId, saved }, 200);
+    return json({ ok: true, recipeId, saved: Boolean(rows[0].saved) }, 200);
   } catch (error) {
     console.error("RECIPE SAVES ERROR:", error);
 

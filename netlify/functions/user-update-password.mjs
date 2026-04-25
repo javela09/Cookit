@@ -6,6 +6,7 @@ const schema = z.object({
   password: z.string().min(6).max(100)
 });
 
+// Actualiza la contraseña del usuario autenticado.
 export default async (req) => {
   if (req.method !== "PUT") {
     return new Response(JSON.stringify({ error: "Metodo no permitido" }), {

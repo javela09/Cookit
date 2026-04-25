@@ -7,6 +7,7 @@ const jsonHeaders = { "content-type": "application/json" };
 const uuidSchema = z.string().uuid();
 const contentSchema = z.string().trim().min(1).max(1000);
 
+// Devuelve una respuesta JSON homogénea.
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), {
     status,
@@ -14,6 +15,7 @@ function json(data, status = 200) {
   });
 }
 
+// Convierte errores de Zod en detalles seguros para el cliente.
 function zodDetails(error) {
   return error.issues?.map(issue => ({
     path: issue.path.join("."),
@@ -22,6 +24,7 @@ function zodDetails(error) {
   })) || [];
 }
 
+// Construye una URL válida incluso cuando falta origen absoluto.
 function getRequestUrl(req) {
   try {
     return new URL(req.url);
@@ -30,6 +33,7 @@ function getRequestUrl(req) {
   }
 }
 
+// Normaliza fechas de PostgreSQL a ISO.
 function toIsoDate(value) {
   if (!value) return null;
   if (value instanceof Date) return value.toISOString();
@@ -38,6 +42,7 @@ function toIsoDate(value) {
   return date.toISOString();
 }
 
+// Extrae el identificador de receta desde query, cabecera, cuerpo o referer.
 function extractRecipeId(req, bodyRecipeId = null) {
   const url = getRequestUrl(req);
   const fromQuery = url.searchParams.get("recipeId") || url.searchParams.get("id");
@@ -61,12 +66,14 @@ function extractRecipeId(req, bodyRecipeId = null) {
   return null;
 }
 
+// Extrae el identificador de comentario desde query o cuerpo.
 function extractCommentId(req, body = {}) {
   const fromQuery = getRequestUrl(req).searchParams.get("commentId");
   if (fromQuery) return fromQuery;
   return body.commentId || body.id || null;
 }
 
+// Comprueba que la receta exista y esté publicada.
 async function assertPublishedRecipe(recipeId) {
   const rows = await sql`
     select id
@@ -80,6 +87,7 @@ async function assertPublishedRecipe(recipeId) {
   return rows.length > 0;
 }
 
+// Recupera comentarios de una receta y marca permisos de edición.
 async function fetchComments(recipeId, currentUserId = null) {
   const rows = await sql`
     select
@@ -112,6 +120,7 @@ async function fetchComments(recipeId, currentUserId = null) {
   }));
 }
 
+// Lee un cuerpo JSON sin romper la petición si está vacío.
 async function readJsonBody(req) {
   try {
     return await req.json();
@@ -120,6 +129,7 @@ async function readJsonBody(req) {
   }
 }
 
+// Enruta lectura, creación, edición y borrado lógico de comentarios.
 export default async (req) => {
   try {
     await ensureDomainSchema();

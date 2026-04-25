@@ -7,6 +7,7 @@ const schema = z.object({
   password: z.string().min(6).max(100)
 });
 
+// Valida credenciales y crea una cookie de sesión.
 export default async (req) => {
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Método no permitido" }), {

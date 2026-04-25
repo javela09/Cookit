@@ -1,3 +1,4 @@
+// Responde si la API está disponible.
 export default async () => {
   return new Response(
     JSON.stringify({ ok: true, message: "API funcionando" }),

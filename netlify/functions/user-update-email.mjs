@@ -6,6 +6,7 @@ const schema = z.object({
   email: z.string().email()
 });
 
+// Actualiza el correo del usuario autenticado si no está en uso.
 export default async (req) => {
   if (req.method !== "PUT") {
     return new Response(JSON.stringify({ error: "Metodo no permitido" }), {

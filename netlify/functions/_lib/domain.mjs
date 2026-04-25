@@ -1,5 +1,8 @@
 import { sql } from "./db.mjs";
 
+let schemaReadyPromise = null;
+
+// Normaliza arrays recibidos como JSON, texto multilínea o arrays reales.
 export function toArray(value) {
   if (Array.isArray(value)) {
     return value
@@ -32,26 +35,8 @@ export function toArray(value) {
   return [];
 }
 
-export function toPayloadObject(value, fallback = {}) {
-  if (value && typeof value === "object" && !Array.isArray(value)) {
-    return value;
-  }
-
-  if (typeof value === "string" && value.trim()) {
-    try {
-      const parsed = JSON.parse(value);
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        return parsed;
-      }
-    } catch {
-      return fallback;
-    }
-  }
-
-  return fallback;
-}
-
-export async function ensureDomainSchema() {
+// Ejecuta la comprobación real de columnas e índices del dominio.
+async function ensureDomainSchemaInternal() {
   const tableRows = await sql`
     select exists(
       select 1
@@ -110,4 +95,16 @@ export async function ensureDomainSchema() {
     create index if not exists idx_recipe_comments_parent
     on recipe_comments(parent_comment_id, created_at desc)
   `;
+}
+
+// Garantiza el esquema de comentarios una sola vez por instancia serverless caliente.
+export async function ensureDomainSchema() {
+  if (!schemaReadyPromise) {
+    schemaReadyPromise = ensureDomainSchemaInternal().catch(error => {
+      schemaReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return schemaReadyPromise;
 }
