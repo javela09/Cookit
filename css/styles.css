@@ -45,9 +45,9 @@ body.home main .container {
 
 main section {
   padding: 1.5rem;
-  background-color: #f8f8f8;
+  /*background-color: #f8f8f8;*/
   border-radius: 0;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+  /*box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);*/
 }
 
 main h2 {
@@ -86,6 +86,10 @@ main h2 {
   border: 1px solid #e3e8d6;
   border-radius: 0;
   align-items: stretch;
+}
+
+.recipeCard:hover {
+  cursor: pointer;
 }
 
 .recipeMedia {
@@ -268,6 +272,11 @@ body.recipesPage main .container {
   cursor: pointer;
 }
 
+.secondaryButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
 .ghostButton {
   padding: 0.6rem 1rem;
   border-radius: 0;
@@ -277,6 +286,11 @@ body.recipesPage main .container {
   font-family: var(--font-secondary);
   font-weight: 600;
   cursor: pointer;
+}
+
+.ghostButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
 }
 
 .recipesGrid {
@@ -294,6 +308,10 @@ body.recipesPage main .container {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.recipeTile:hover {
+  cursor: pointer;
 }
 
 .tileMedia {
@@ -519,6 +537,11 @@ body.userPage main .container {
   font-family: var(--font-secondary);
   font-weight: 700;
   cursor: pointer;
+}
+
+.dangerButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
 }
 
 .recipeDetail {
