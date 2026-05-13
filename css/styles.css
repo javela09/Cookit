@@ -34,7 +34,7 @@ main {
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   column-gap: 10px;
-  row-gap: 10px;
+  /*row-gap: 10px;*/
 }
 
 /*--------------------- GENERAL ---------------------------*/
@@ -184,10 +184,6 @@ main h2 {
 
 
 /*---------------------- RECIPES PAGE ----------------------*/
-
-body.recipesPage main .container {
-  row-gap: 1.5rem;
-}
 
 .recipesHeader {
   grid-column: 1 / span 12;
@@ -553,6 +549,23 @@ body.userPage main .container {
   box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
 }
 
+.reportButton {
+  padding: 0.6rem 1rem;
+  border-radius: 0;
+  border: 1px solid #c75b5b;
+  background: #fff5f5;
+  color: #9b1c1c;
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reportButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+  background: #f9e3e3;
+}
+
 .recipeDetail {
   grid-column: 1 / span 12;
   display: grid;
@@ -575,6 +588,8 @@ body.userPage main .container {
   grid-column: 6 / span 7;
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  align-content: stretch;
   gap: 1rem;
 }
 
@@ -612,6 +627,7 @@ body.userPage main .container {
   grid-column: 1 / span 7;
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  align-self: start;
   gap: 1rem;
 }
 
@@ -637,6 +653,8 @@ body.userPage main .container {
   flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  align-self: end;
+  margin-top: auto;
   gap: 0.75rem;
 }
 
@@ -646,6 +664,18 @@ body.userPage main .container {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
+}
+
+.shareActions .shareButton {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.6rem 1rem;
+  border: 1px solid #9aac6e;
+  font-family: var(--font-secondary);
+  font-weight: 600;
+  line-height: 1;
 }
 
 .detailVoteBox .votes {
@@ -1210,9 +1240,9 @@ footer .imgSection img {
   .commentActions .secondaryButton,
   .commentActions .ghostButton,
   .commentActions .dangerButton,
+  .commentActions .reportButton,
   .detailVoteBox .ghostButton,
-  .shareActions .secondaryButton,
-  .shareActions .ghostButton,
+  .shareActions .shareButton,
   .tileActions .secondaryButton,
   .tileActions .ghostButton,
   .pagination .ghostButton {

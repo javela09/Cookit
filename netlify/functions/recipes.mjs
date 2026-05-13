@@ -164,10 +164,12 @@ function normalizeInput(raw, imageUrlOverride) {
 // Lee una receta enviada como multipart y convierte la imagen a data URL.
 async function parseMultipartRecipe(req) {
   const formData = await req.formData();
+  const payload = Object.fromEntries(formData.entries());
+  const isVariant = Boolean(payload.parentRecipeId || payload.parent_recipe_id || payload.variantOf);
   const file = formData.get("imageFile");
   let imageUrl = null;
 
-  if (file && typeof file === "object" && typeof file.arrayBuffer === "function") {
+  if (!isVariant && file && typeof file === "object" && typeof file.arrayBuffer === "function") {
     if (!file.type || !file.type.startsWith("image/")) {
       throw new HttpError("La imagen debe ser de tipo image/*", 400, [
         { path: "imageFile", message: "Tipo de archivo no permitido", code: "invalid_type" }
@@ -185,7 +187,6 @@ async function parseMultipartRecipe(req) {
     imageUrl = `data:${file.type};base64,${bytes.toString("base64")}`;
   }
 
-  const payload = Object.fromEntries(formData.entries());
   return normalizeInput(payload, imageUrl);
 }
 
@@ -262,7 +263,10 @@ async function getRecipe(req, recipeId) {
       r.title,
       r.description,
       r.time_minutes,
-      r.image_url,
+      case
+        when r.parent_recipe_id is null then r.image_url
+        else parent_r.image_url
+      end as image_url,
       r.categories,
       r.ingredients,
       r.steps,
@@ -272,6 +276,10 @@ async function getRecipe(req, recipeId) {
       case when rs.user_id is null then false else true end as saved,
       case when rv.user_id is null then false else true end as voted
     from recipes r
+    left join recipes parent_r
+      on parent_r.id = r.parent_recipe_id
+     and parent_r.deleted_at is null
+     and parent_r.is_published = true
     join app_users u on u.id = r.author_id
     left join (
       select recipe_id, count(*)::int as vote_count
@@ -318,7 +326,7 @@ async function listRecipeVariants(req, parentRecipeId) {
       r.title,
       r.description,
       r.time_minutes,
-      r.image_url,
+      parent_r.image_url,
       r.categories,
       r.ingredients,
       r.steps,
@@ -328,6 +336,10 @@ async function listRecipeVariants(req, parentRecipeId) {
       case when rs.user_id is null then false else true end as saved,
       case when rv.user_id is null then false else true end as voted
     from recipes r
+    join recipes parent_r
+      on parent_r.id = r.parent_recipe_id
+     and parent_r.deleted_at is null
+     and parent_r.is_published = true
     join app_users u on u.id = r.author_id
     left join (
       select recipe_id, count(*)::int as vote_count
@@ -438,6 +450,7 @@ async function createRecipe(req) {
     }
   }
 
+  // Las variantes conservan image_url a null y heredan la imagen de la receta original al consultarse.
   const rows = await sql`
     insert into recipes (
       author_id,
@@ -458,7 +471,7 @@ async function createRecipe(req) {
       ${payload.description},
       ${payload.timeMinutes ?? null},
       ${payload.difficulty ?? null},
-      ${payload.imageUrl ?? null},
+      ${payload.parentRecipeId ? null : payload.imageUrl ?? null},
       ${JSON.stringify(payload.categories)}::jsonb,
       ${JSON.stringify(payload.ingredients)}::jsonb,
       ${JSON.stringify(payload.steps)}::jsonb,

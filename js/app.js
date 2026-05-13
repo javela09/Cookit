@@ -718,9 +718,7 @@
       return;
     }
 
-    if (action === "instagram") {
-      showDetailFeedback("Instagram no permite compartir enlaces web directamente. Usa copiar enlace.", false);
-    }
+    showDetailFeedback("Accion de compartir no disponible.", true);
   }
 
   // Renderiza la informacion principal de una receta.
@@ -979,7 +977,7 @@
 
       const reportBtn = document.createElement("button");
       reportBtn.type = "button";
-      reportBtn.className = "ghostButton commentActionBtn";
+      reportBtn.className = "reportButton commentActionBtn";
       reportBtn.dataset.commentAction = "report";
       reportBtn.dataset.commentId = comment.id;
       reportBtn.textContent = "Reportar";
@@ -1402,10 +1400,18 @@
     const title = document.getElementById("newRecipeTitle");
     const lead = document.getElementById("newRecipeLead");
     const submitBtn = document.getElementById("newRecipeSubmit");
+    const imageField = document.getElementById("newImageField");
+    const imageInput = document.getElementById("newImage");
 
     if (title) title.textContent = "Nueva variante";
-    if (lead) lead.textContent = "Revisa los datos base, ajusta tu variante y selecciona una imagen local.";
+    if (lead) lead.textContent = "Revisa los datos base y ajusta tu variante. Se reutilizara la imagen de la receta original.";
     if (submitBtn) submitBtn.textContent = "Publicar variante";
+    if (imageField) imageField.hidden = true;
+    if (imageInput) {
+      imageInput.required = false;
+      imageInput.disabled = true;
+      imageInput.value = "";
+    }
 
     const baseRecipe = state.variantBaseRecipe;
     if (!baseRecipe || form.dataset.variantPrefilled) return;
@@ -1449,6 +1455,8 @@
       const ingredients = splitLines(document.getElementById("newIngredients")?.value || "");
       const steps = splitLines(document.getElementById("newSteps")?.value || "");
       const imageFile = document.getElementById("newImage")?.files?.[0] || null;
+      const variantOfId = getVariantOfId();
+      const isVariant = Boolean(variantOfId);
 
       const timeMinutes = Number.parseInt(timeRaw, 10);
 
@@ -1462,17 +1470,17 @@
         return;
       }
 
-      if (!imageFile) {
+      if (!isVariant && !imageFile) {
         alert("Selecciona una imagen local para la receta");
         return;
       }
 
-      if (!imageFile.type || !imageFile.type.startsWith("image/")) {
+      if (!isVariant && (!imageFile.type || !imageFile.type.startsWith("image/"))) {
         alert("El archivo debe ser una imagen valida");
         return;
       }
 
-      if (imageFile.size > MAX_IMAGE_SIZE_BYTES) {
+      if (!isVariant && imageFile.size > MAX_IMAGE_SIZE_BYTES) {
         alert("La imagen no puede superar 3MB");
         return;
       }
@@ -1488,10 +1496,10 @@
         payload.append("categories", JSON.stringify(categories));
         payload.append("ingredients", JSON.stringify(ingredients));
         payload.append("steps", JSON.stringify(steps));
-        payload.append("imageFile", imageFile);
-        const variantOfId = getVariantOfId();
-        if (variantOfId) {
+        if (isVariant) {
           payload.append("parentRecipeId", variantOfId);
+        } else {
+          payload.append("imageFile", imageFile);
         }
 
         const createdRecipe = await window.api("/api/recipes", {
