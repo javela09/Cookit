@@ -1,8 +1,8 @@
-# Local Netlify folder
 .netlify
 node_modules
 .env
 .env.local
 .env.example
 readme.md
+local-api.js
 local-server.js
