@@ -28,8 +28,8 @@
     <div class="container">
       <section class="userPanel">
         <div class="userInfo">
-          <h2>Nueva receta</h2>
-          <p class="sectionLead">Completa todos los campos para publicar tu receta.</p>
+          <h2 id="newRecipeTitle">Nueva receta</h2>
+          <p class="sectionLead" id="newRecipeLead">Completa todos los campos para publicar tu receta.</p>
           <form class="newRecipeForm" id="newRecipeForm">
             <div class="formField full">
               <label for="newTitle">Título</label>
@@ -73,7 +73,7 @@
               <textarea id="newSteps" required placeholder="Paso 1&#10;Paso 2&#10;Paso 3"></textarea>
             </div>
             <div class="newRecipeActions">
-              <button type="submit" class="primaryButton">Publicar</button>
+              <button type="submit" class="primaryButton" id="newRecipeSubmit">Publicar</button>
             </div>
           </form>
         </div>

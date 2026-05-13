@@ -2,7 +2,7 @@ import { Buffer } from "node:buffer";
 import { z } from "zod";
 import { getCurrentUser } from "./_lib/auth.mjs";
 import { sql } from "./_lib/db.mjs";
-import { toArray } from "./_lib/domain.mjs";
+import { ensureDomainSchema, toArray } from "./_lib/domain.mjs";
 
 const jsonHeaders = { "content-type": "application/json" };
 const uuidSchema = z.string().uuid();
@@ -16,7 +16,8 @@ const recipeSchema = z.object({
   categories: z.array(z.string().trim().min(1).max(60)).max(40).default([]),
   ingredients: z.array(z.string().trim().min(1).max(400)).min(1).max(200),
   steps: z.array(z.string().trim().min(1).max(2000)).min(1).max(200),
-  imageUrl: z.string().max(4_500_000).nullable().optional()
+  imageUrl: z.string().max(4_500_000).nullable().optional(),
+  parentRecipeId: z.string().uuid().nullable().optional()
 });
 
 class HttpError extends Error {
@@ -102,7 +103,9 @@ function mapRecipeRow(row) {
     steps: toStringArray(row.steps),
     image: row.image_url || null,
     saved: Boolean(row.saved),
-    voted: Boolean(row.voted)
+    voted: Boolean(row.voted),
+    parentRecipeId: row.parent_recipe_id || null,
+    isVariant: Boolean(row.parent_recipe_id)
   };
 }
 
@@ -125,6 +128,7 @@ function normalizeInput(raw, imageUrlOverride) {
   const steps = toStringArray(raw.steps ?? raw.newSteps ?? []);
   const difficulty = raw.difficulty ?? null;
   const imageUrl = imageUrlOverride ?? raw.imageUrl ?? raw.image_url ?? raw.image ?? null;
+  const parentRecipeId = raw.parentRecipeId ?? raw.parent_recipe_id ?? raw.variantOf ?? null;
 
   if (Number.isNaN(parsedTime)) {
     throw new HttpError("El tiempo debe ser un numero entero en minutos", 400, [
@@ -144,7 +148,10 @@ function normalizeInput(raw, imageUrlOverride) {
     categories,
     ingredients,
     steps,
-    imageUrl: typeof imageUrl === "string" && imageUrl.trim() ? imageUrl.trim() : null
+    imageUrl: typeof imageUrl === "string" && imageUrl.trim() ? imageUrl.trim() : null,
+    parentRecipeId: typeof parentRecipeId === "string" && parentRecipeId.trim()
+      ? parentRecipeId.trim()
+      : null
   });
 
   if (!parsed.success) {
@@ -212,6 +219,7 @@ async function listRecipeSummaries(req) {
       r.categories,
       null::jsonb as ingredients,
       null::jsonb as steps,
+      r.parent_recipe_id::text as parent_recipe_id,
       r.created_at,
       coalesce(v.vote_count, 0)::int as votes,
       false as saved,
@@ -225,6 +233,7 @@ async function listRecipeSummaries(req) {
     ) v on v.recipe_id = r.id
     where r.deleted_at is null
       and r.is_published = true
+      and r.parent_recipe_id is null
     order by coalesce(v.vote_count, 0) desc, r.created_at desc
     limit ${limit}
   `;
@@ -257,6 +266,7 @@ async function getRecipe(req, recipeId) {
       r.categories,
       r.ingredients,
       r.steps,
+      r.parent_recipe_id::text as parent_recipe_id,
       r.created_at,
       coalesce(v.vote_count, 0)::int as votes,
       case when rs.user_id is null then false else true end as saved,
@@ -287,10 +297,67 @@ async function getRecipe(req, recipeId) {
   return json(mapRecipeRow(rows[0]), 200);
 }
 
+// Lista variantes asociadas a una receta principal, ordenadas por votos.
+async function listRecipeVariants(req, parentRecipeId) {
+  const parsedId = uuidSchema.safeParse(parentRecipeId);
+  if (!parsedId.success) {
+    return json(
+      { error: "parentRecipeId invalido", details: zodDetails(parsedId.error) },
+      400
+    );
+  }
+
+  const user = await getCurrentUser(req);
+  const userId = user?.id || null;
+
+  const rows = await sql`
+    select
+      r.id::text as id,
+      r.author_id::text as author_id,
+      u.username as author,
+      r.title,
+      r.description,
+      r.time_minutes,
+      r.image_url,
+      r.categories,
+      r.ingredients,
+      r.steps,
+      r.parent_recipe_id::text as parent_recipe_id,
+      r.created_at,
+      coalesce(v.vote_count, 0)::int as votes,
+      case when rs.user_id is null then false else true end as saved,
+      case when rv.user_id is null then false else true end as voted
+    from recipes r
+    join app_users u on u.id = r.author_id
+    left join (
+      select recipe_id, count(*)::int as vote_count
+      from recipe_votes
+      group by recipe_id
+    ) v on v.recipe_id = r.id
+    left join recipe_saves rs
+      on rs.recipe_id = r.id
+     and rs.user_id = ${userId}::uuid
+    left join recipe_votes rv
+      on rv.recipe_id = r.id
+     and rv.user_id = ${userId}::uuid
+    where r.deleted_at is null
+      and r.is_published = true
+      and r.parent_recipe_id = ${parsedId.data}::uuid
+    order by coalesce(v.vote_count, 0) desc, r.created_at desc
+  `;
+
+  return json(rows.map(mapRecipeRow), 200);
+}
+
 // Lista todas las recetas publicadas para vistas que necesitan filtros completos.
 async function listRecipes(req) {
   const url = getRequestUrl(req);
+  const parentRecipeId = url.searchParams.get("parentRecipeId") || url.searchParams.get("variantOf");
   const recipeId = url.searchParams.get("recipeId") || url.searchParams.get("id");
+
+  if (parentRecipeId) {
+    return listRecipeVariants(req, parentRecipeId);
+  }
 
   if (recipeId) {
     return getRecipe(req, recipeId);
@@ -315,6 +382,7 @@ async function listRecipes(req) {
       r.categories,
       r.ingredients,
       r.steps,
+      r.parent_recipe_id::text as parent_recipe_id,
       r.created_at,
       coalesce(v.vote_count, 0)::int as votes,
       case when rs.user_id is null then false else true end as saved,
@@ -334,6 +402,7 @@ async function listRecipes(req) {
      and rv.user_id = ${userId}::uuid
     where r.deleted_at is null
       and r.is_published = true
+      and r.parent_recipe_id is null
     order by r.created_at desc
   `;
 
@@ -353,6 +422,22 @@ async function createRecipe(req) {
     ? await parseMultipartRecipe(req)
     : await parseJsonRecipe(req);
 
+  if (payload.parentRecipeId) {
+    const parentRows = await sql`
+      select id
+      from recipes
+      where id = ${payload.parentRecipeId}::uuid
+        and deleted_at is null
+        and is_published = true
+        and parent_recipe_id is null
+      limit 1
+    `;
+
+    if (parentRows.length === 0) {
+      throw new HttpError("Receta original no encontrada para crear la variante", 404);
+    }
+  }
+
   const rows = await sql`
     insert into recipes (
       author_id,
@@ -364,6 +449,7 @@ async function createRecipe(req) {
       categories,
       ingredients,
       steps,
+      parent_recipe_id,
       is_published
     )
     values (
@@ -376,6 +462,7 @@ async function createRecipe(req) {
       ${JSON.stringify(payload.categories)}::jsonb,
       ${JSON.stringify(payload.ingredients)}::jsonb,
       ${JSON.stringify(payload.steps)}::jsonb,
+      ${payload.parentRecipeId ?? null}::uuid,
       true
     )
     returning
@@ -388,6 +475,7 @@ async function createRecipe(req) {
       categories,
       ingredients,
       steps,
+      parent_recipe_id::text as parent_recipe_id,
       created_at
   `;
 
@@ -465,6 +553,8 @@ async function deleteRecipe(req) {
 // Enruta las operaciones disponibles sobre recetas.
 export default async (req) => {
   try {
+    await ensureDomainSchema();
+
     if (req.method === "GET") {
       return await listRecipes(req);
     }

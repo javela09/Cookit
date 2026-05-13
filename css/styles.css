@@ -189,6 +189,10 @@ body.recipesPage main .container {
   row-gap: 1.5rem;
 }
 
+.recipesHeader {
+  grid-column: 1 / span 12;
+}
+
 .filtersBar {
   grid-column: 1 / span 12;
   display: grid;
@@ -627,6 +631,61 @@ body.userPage main .container {
   color: #333;
 }
 
+.detailRecipeActions {
+  grid-column: 1 / span 7;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detailVoteBox,
+.shareActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.detailVoteBox .votes {
+  font-family: var(--font-secondary);
+  font-weight: 700;
+  color: #2f3a18;
+}
+
+.detailFeedback {
+  flex-basis: 100%;
+  margin: 0;
+  min-height: 1.2rem;
+  font-family: var(--font-secondary);
+  font-size: 0.9rem;
+}
+
+.detailFeedback.isError {
+  color: #7b1e1e;
+}
+
+.detailFeedback.isSuccess {
+  color: #2f3a18;
+}
+
+.recipeVariants {
+  grid-column: 1 / span 12;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  border-top: 1px solid var(--color-text3);
+  border-bottom: 1px solid var(--color-text3);
+}
+
+.recipeVariants h3 {
+  margin: 0;
+  font-family: var(--font-primary);
+  font-size: 1.4rem;
+  color: #1d1d1d;
+}
+
 /*---------------------- RECIPE COMMENTS ------------------*/
 
 .recipeComments {
@@ -967,6 +1026,7 @@ footer .imgSection img {
   .detailContent,
   .detailMainInfo,
   .detailLists,
+  .detailRecipeActions,
   footer .footerLegalInfo,
   footer .footerContactInfo,
   footer .imgSection {
@@ -1098,6 +1158,9 @@ footer .imgSection img {
   .cardMeta,
   .tileMeta,
   .detailMetaRow,
+  .detailRecipeActions,
+  .detailVoteBox,
+  .shareActions,
   .pagination,
   .newRecipeActions,
   .authActions,
@@ -1147,6 +1210,9 @@ footer .imgSection img {
   .commentActions .secondaryButton,
   .commentActions .ghostButton,
   .commentActions .dangerButton,
+  .detailVoteBox .ghostButton,
+  .shareActions .secondaryButton,
+  .shareActions .ghostButton,
   .tileActions .secondaryButton,
   .tileActions .ghostButton,
   .pagination .ghostButton {

@@ -49,7 +49,28 @@
               <ol id="detailSteps"></ol>
             </div>
           </div>
+          <div class="detailRecipeActions">
+            <div class="detailVoteBox">
+              <button class="ghostButton" id="detailVoteButton" type="button">Votar</button>
+              <span class="votes" id="detailVoteCount">0 votos</span>
+            </div>
+            <div class="shareActions" aria-label="Compartir receta">
+              <button class="secondaryButton shareButton" type="button" data-share-action="whatsapp">WhatsApp</button>
+              <button class="secondaryButton shareButton" type="button" data-share-action="instagram">Instagram</button>
+              <button class="secondaryButton shareButton" type="button" data-share-action="facebook">Facebook</button>
+              <button class="ghostButton shareButton" type="button" data-share-action="copy">Copiar enlace</button>
+            </div>
+            <p class="detailFeedback" id="detailFeedback" aria-live="polite"></p>
+          </div>
         </div>
+      </section>
+      <section class="recipeVariants" aria-labelledby="variantsTitle">
+        <div class="sectionHeader">
+          <h3 id="variantsTitle">Variantes</h3>
+          <a class="primaryButton" id="newVariantButton" href="newrecipe.html">Nueva variante</a>
+          <p class="sectionLead">Versiones asociadas a esta receta, ordenadas por popularidad.</p>
+        </div>
+        <div class="recipesScroller" id="recipeVariantsList"></div>
       </section>
       <section class="recipeComments" aria-labelledby="commentsTitle">
         <h3 id="commentsTitle">Comentarios</h3>

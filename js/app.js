@@ -6,7 +6,9 @@
   const state = {
     user: null,
     recipes: [],
-    comments: []
+    variants: [],
+    comments: [],
+    variantBaseRecipe: null
   };
 
   const pageState = {
@@ -46,6 +48,11 @@
   // Indica si la página actual muestra el panel de usuario.
   function isUserPage() {
     return getPageName() === "user";
+  }
+
+  // Indica si la pagina actual muestra el formulario de receta.
+  function isNewRecipePage() {
+    return getPageName() === "newrecipe";
   }
 
   // Comprueba si existe un bloque concreto en el DOM.
@@ -92,6 +99,12 @@
   function getCurrentRecipeId() {
     const params = new URLSearchParams(window.location.search);
     return params.get("id");
+  }
+
+  // Lee el identificador de receta original al crear una variante.
+  function getVariantOfId() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("variantOf");
   }
 
   // Busca una receta cargada en memoria por su identificador.
@@ -203,6 +216,40 @@
     } catch (error) {
       console.error("No se pudo cargar la receta:", error);
       state.recipes = [];
+    }
+  }
+
+  // Carga las variantes de una receta principal.
+  async function loadRecipeVariants(parentRecipeId) {
+    if (!parentRecipeId) {
+      state.variants = [];
+      return;
+    }
+
+    try {
+      const variants = await window.api(
+        `/api/recipes?parentRecipeId=${encodeURIComponent(parentRecipeId)}`
+      );
+      state.variants = Array.isArray(variants) ? variants : [];
+    } catch (error) {
+      console.error("No se pudieron cargar variantes:", error);
+      state.variants = [];
+    }
+  }
+
+  // Carga la receta base cuando el formulario se usa para crear una variante.
+  async function loadVariantBaseRecipe(parentRecipeId) {
+    if (!parentRecipeId) {
+      state.variantBaseRecipe = null;
+      return;
+    }
+
+    try {
+      const recipe = await window.api(`/api/recipes?recipeId=${encodeURIComponent(parentRecipeId)}`);
+      state.variantBaseRecipe = recipe || null;
+    } catch (error) {
+      console.error("No se pudo cargar la receta original:", error);
+      state.variantBaseRecipe = null;
     }
   }
 
@@ -319,6 +366,11 @@
   // Navega al detalle de una receta.
   function goToDetail(id) {
     window.location.href = `recipe.html?id=${encodeURIComponent(id)}`;
+  }
+
+  // Obtiene la receta principal a la que debe asociarse una variante.
+  function getParentRecipeId(recipe) {
+    return recipe?.parentRecipeId || recipe?.id || null;
   }
 
   // Renderiza las recetas mejor valoradas en portada.
@@ -512,6 +564,11 @@
         recipe.voted = Boolean(result.voted);
         recipe.votes = Number(result.votes || 0);
       }
+      const variant = state.variants.find(item => item.id === recipeId);
+      if (variant) {
+        variant.voted = Boolean(result.voted);
+        variant.votes = Number(result.votes || 0);
+      }
       renderAll();
     } catch (error) {
       alert(error.message || "No se pudo actualizar el voto");
@@ -614,7 +671,59 @@
     }
   }
 
-  // Renderiza la información principal de una receta.
+  // Muestra mensajes breves de acciones del detalle.
+  function showDetailFeedback(message, isError = false) {
+    const feedback = document.getElementById("detailFeedback");
+    if (!feedback) return;
+    feedback.textContent = message || "";
+    feedback.classList.toggle("isError", Boolean(message && isError));
+    feedback.classList.toggle("isSuccess", Boolean(message && !isError));
+  }
+
+  // Ejecuta las acciones de compartir disponibles para una receta.
+  async function shareRecipe(recipe, action) {
+    const url = window.location.href;
+    const title = recipe?.title || "Receta de Cookit";
+
+    if (action === "whatsapp") {
+      window.open(
+        `https://wa.me/?text=${encodeURIComponent(`${title} ${url}`)}`,
+        "_blank",
+        "noopener"
+      );
+      return;
+    }
+
+    if (action === "facebook") {
+      window.open(
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`,
+        "_blank",
+        "noopener"
+      );
+      return;
+    }
+
+    if (action === "copy") {
+      if (!navigator.clipboard) {
+        showDetailFeedback("Tu navegador no permite copiar el enlace automaticamente.", true);
+        return;
+      }
+
+      try {
+        await navigator.clipboard.writeText(url);
+        showDetailFeedback("Enlace copiado", false);
+      } catch {
+        showDetailFeedback("No se pudo copiar el enlace automaticamente.", true);
+      }
+      return;
+    }
+
+    if (action === "instagram") {
+      showDetailFeedback("Instagram no permite compartir enlaces web directamente. Usa copiar enlace.", false);
+    }
+  }
+
+  // Renderiza la informacion principal de una receta.
   function renderRecipeDetail() {
     const detail = document.getElementById("recipeDetail");
     if (!detail) return null;
@@ -638,12 +747,36 @@
     const ingEl = document.getElementById("detailIngredients");
     const stepsEl = document.getElementById("detailSteps");
     const mediaEl = document.getElementById("detailMedia");
+    const voteBtn = document.getElementById("detailVoteButton");
+    const voteCountEl = document.getElementById("detailVoteCount");
+    const newVariantBtn = document.getElementById("newVariantButton");
 
     if (titleEl) titleEl.textContent = recipe.title;
     if (descEl) descEl.textContent = recipe.description;
     if (authorEl) authorEl.textContent = `por ${recipe.author}`;
     if (timeEl) timeEl.textContent = formatMinutes(recipe.time);
     if (votesEl) votesEl.textContent = `${recipe.votes || 0} votos`;
+    if (voteCountEl) voteCountEl.textContent = `${recipe.votes || 0} votos`;
+
+    if (voteBtn) {
+      voteBtn.textContent = recipe.voted ? "Retirar voto" : "Votar";
+      voteBtn.onclick = async () => {
+        await voteRecipe(recipe.id);
+      };
+    }
+
+    document.querySelectorAll("[data-share-action]").forEach(button => {
+      button.onclick = async () => {
+        await shareRecipe(recipe, button.dataset.shareAction);
+      };
+    });
+
+    if (newVariantBtn) {
+      const parentRecipeId = getParentRecipeId(recipe);
+      newVariantBtn.href = parentRecipeId
+        ? `newrecipe.html?variantOf=${encodeURIComponent(parentRecipeId)}`
+        : "newrecipe.html";
+    }
 
     if (tagsEl) {
       tagsEl.innerHTML = "";
@@ -678,6 +811,47 @@
     }
 
     return recipe;
+  }
+
+  // Construye una tarjeta de variante reutilizando la estructura visual del perfil.
+  function createVariantRecipeCard(recipe) {
+    const card = document.createElement("article");
+    card.className = "userRecipeCard";
+    const mediaStyle = recipe.image ? `style="background-image:url('${recipe.image}')"` : "";
+    card.innerHTML = `
+      <div class="tileMedia" ${mediaStyle} aria-hidden="true"></div>
+      <h3>${recipe.title}</h3>
+      <p class="tileAuthor">de ${recipe.author}</p>
+      <p class="tileDescription">${recipe.description}</p>
+      <div class="tileMeta">
+        <span>${formatDate(recipe.date)}</span>
+        <span class="votes">${recipe.votes || 0} votos</span>
+      </div>`;
+
+    card.addEventListener("click", () => goToDetail(recipe.id));
+    return card;
+  }
+
+  // Renderiza la cinta horizontal de variantes asociadas a la receta principal.
+  function renderRecipeVariants() {
+    const container = document.getElementById("recipeVariantsList");
+    if (!container) return;
+
+    const recipe = getRecipeById(getCurrentRecipeId());
+    const variants = [...state.variants]
+      .filter(variant => !recipe || variant.id !== recipe.id)
+      .sort((a, b) => (b.votes || 0) - (a.votes || 0));
+
+    container.innerHTML = "";
+
+    if (!variants.length) {
+      container.innerHTML = "<p>Todavia no hay variantes para esta receta.</p>";
+      return;
+    }
+
+    variants.forEach(variant => {
+      container.appendChild(createVariantRecipeCard(variant));
+    });
   }
 
   // Determina si un comentario fue editado tras crearse.
@@ -802,6 +976,14 @@
       replyBtn.dataset.commentId = comment.id;
       replyBtn.textContent = "Responder";
       actions.appendChild(replyBtn);
+
+      const reportBtn = document.createElement("button");
+      reportBtn.type = "button";
+      reportBtn.className = "ghostButton commentActionBtn";
+      reportBtn.dataset.commentAction = "report";
+      reportBtn.dataset.commentId = comment.id;
+      reportBtn.textContent = "Reportar";
+      actions.appendChild(reportBtn);
     }
 
     if (comment.canEdit) {
@@ -979,6 +1161,11 @@
       const recipeId = getCurrentRecipeId();
 
       if (!recipeId || !commentId) return;
+
+      if (action === "report") {
+        showCommentFeedback("Reporte pendiente de implementar.", false);
+        return;
+      }
 
       if (action === "reply" || action === "edit") {
         openInlineCommentForm(commentId, action);
@@ -1206,7 +1393,43 @@
     }
   }
 
-  // Vincula el formulario de creación de receta.
+  // Adapta el formulario de receta cuando se usa para crear una variante.
+  function renderNewRecipeMode() {
+    const form = document.getElementById("newRecipeForm");
+    const variantOfId = getVariantOfId();
+    if (!form || !variantOfId) return;
+
+    const title = document.getElementById("newRecipeTitle");
+    const lead = document.getElementById("newRecipeLead");
+    const submitBtn = document.getElementById("newRecipeSubmit");
+
+    if (title) title.textContent = "Nueva variante";
+    if (lead) lead.textContent = "Revisa los datos base, ajusta tu variante y selecciona una imagen local.";
+    if (submitBtn) submitBtn.textContent = "Publicar variante";
+
+    const baseRecipe = state.variantBaseRecipe;
+    if (!baseRecipe || form.dataset.variantPrefilled) return;
+
+    const titleField = document.getElementById("newTitle");
+    const timeField = document.getElementById("newTime");
+    const descriptionField = document.getElementById("newDescription");
+    const ingredientsField = document.getElementById("newIngredients");
+    const stepsField = document.getElementById("newSteps");
+
+    if (titleField) titleField.value = `Variante de ${baseRecipe.title}`;
+    if (timeField) timeField.value = formatMinutes(baseRecipe.time);
+    if (descriptionField) descriptionField.value = baseRecipe.description || "";
+    if (ingredientsField) ingredientsField.value = (baseRecipe.ingredients || []).join("\n");
+    if (stepsField) stepsField.value = (baseRecipe.steps || []).join("\n");
+
+    document.querySelectorAll("#newCategories input[type='checkbox']").forEach(node => {
+      node.checked = Array.isArray(baseRecipe.categories) && baseRecipe.categories.includes(node.value);
+    });
+
+    form.dataset.variantPrefilled = "1";
+  }
+
+  // Vincula el formulario de creacion de receta.
   function bindNewRecipeForm() {
     const form = document.getElementById("newRecipeForm");
     if (!form || form.dataset.bound) return;
@@ -1266,6 +1489,10 @@
         payload.append("ingredients", JSON.stringify(ingredients));
         payload.append("steps", JSON.stringify(steps));
         payload.append("imageFile", imageFile);
+        const variantOfId = getVariantOfId();
+        if (variantOfId) {
+          payload.append("parentRecipeId", variantOfId);
+        }
 
         const createdRecipe = await window.api("/api/recipes", {
           method: "POST",
@@ -1288,7 +1515,9 @@
     applyFiltersAndRender();
     renderUserLists();
     renderRecipeDetail();
+    renderRecipeVariants();
     renderComments();
+    renderNewRecipeMode();
     renderAuthPage();
   }
 
@@ -1306,16 +1535,20 @@
 
     if (!isLoginPage() && state.user) {
       const recipeId = getCurrentRecipeId();
+      const variantOfId = getVariantOfId();
 
       if (isHomePage() || hasElement("bestValuedList")) {
         await loadRecipes({ mode: "home" });
       } else if (isRecipeDetailPage() || hasElement("recipeDetail")) {
         await loadRecipeDetail(recipeId);
+      } else if (isNewRecipePage() && variantOfId) {
+        await loadVariantBaseRecipe(variantOfId);
       } else if (isRecipesPage() || isUserPage() || hasElement("recipesGrid") || hasElement("myRecipes")) {
         await loadRecipes();
       }
 
       if (isRecipeDetailPage() && recipeId && getRecipeById(recipeId)) {
+        await loadRecipeVariants(getParentRecipeId(getRecipeById(recipeId)));
         await loadComments(recipeId);
       }
     }

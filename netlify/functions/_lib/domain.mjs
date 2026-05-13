@@ -37,6 +37,63 @@ export function toArray(value) {
 
 // Ejecuta la comprobación real de columnas e índices del dominio.
 async function ensureDomainSchemaInternal() {
+  const recipesTableRows = await sql`
+    select exists(
+      select 1
+      from information_schema.tables
+      where table_schema = 'public'
+        and table_name = 'recipes'
+    ) as exists
+  `;
+
+  if (recipesTableRows[0]?.exists) {
+    const parentColumnRows = await sql`
+      select exists(
+        select 1
+        from information_schema.columns
+        where table_schema = 'public'
+          and table_name = 'recipes'
+          and column_name = 'parent_recipe_id'
+      ) as exists
+    `;
+
+    if (!parentColumnRows[0]?.exists) {
+      await sql`
+        alter table recipes
+        add column parent_recipe_id uuid null
+      `;
+    }
+
+    const parentFkRows = await sql`
+      select exists(
+        select 1
+        from information_schema.table_constraints tc
+        join information_schema.key_column_usage kcu
+          on tc.constraint_name = kcu.constraint_name
+         and tc.table_schema = kcu.table_schema
+        where tc.table_schema = 'public'
+          and tc.table_name = 'recipes'
+          and tc.constraint_type = 'FOREIGN KEY'
+          and kcu.column_name = 'parent_recipe_id'
+      ) as exists
+    `;
+
+    if (!parentFkRows[0]?.exists) {
+      await sql`
+        alter table recipes
+        add constraint recipes_parent_recipe_id_fkey
+        foreign key (parent_recipe_id)
+        references recipes(id)
+        on delete set null
+      `;
+    }
+
+    await sql`
+      create index if not exists idx_recipes_parent_recipe
+      on recipes(parent_recipe_id, created_at desc)
+    `;
+  }
+
   const tableRows = await sql`
     select exists(
       select 1
