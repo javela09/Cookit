@@ -109,6 +109,28 @@ function mapRecipeRow(row) {
   };
 }
 
+// Convierte una fila SQL de variante al mismo contrato publico de receta.
+function mapVariantRow(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    author: row.author,
+    authorId: row.author_id,
+    date: toIsoDate(row.created_at),
+    votes: Number(row.votes || 0),
+    time: row.time_minutes,
+    categories: toStringArray(row.categories),
+    ingredients: toStringArray(row.ingredients),
+    steps: toStringArray(row.steps),
+    image: row.image_url || null,
+    saved: false,
+    voted: Boolean(row.voted),
+    parentRecipeId: row.parent_recipe_id || null,
+    isVariant: true
+  };
+}
+
 // Limita parámetros numéricos de consulta para evitar respuestas grandes.
 function parsePositiveLimit(value, fallback, max) {
   const parsed = Number.parseInt(value, 10);
@@ -299,10 +321,58 @@ async function getRecipe(req, recipeId) {
   `;
 
   if (rows.length === 0) {
-    return json({ error: "Receta no encontrada" }, 404);
+    return getVariant(req, parsedId.data);
   }
 
   return json(mapRecipeRow(rows[0]), 200);
+}
+
+// Obtiene una variante concreta usando la imagen de su receta original.
+async function getVariant(req, variantId) {
+  const user = await getCurrentUser(req);
+  const userId = user?.id || null;
+
+  const rows = await sql`
+    select
+      v.id::text as id,
+      v.user_id::text as author_id,
+      u.username as author,
+      v.title,
+      v.description,
+      v.time_minutes,
+      r.image_url,
+      v.categories,
+      v.ingredients,
+      v.steps,
+      v.recipe_id::text as parent_recipe_id,
+      v.created_at,
+      coalesce(votes.vote_count, 0)::int as votes,
+      case when rv.user_id is null then false else true end as voted
+    from recipe_variants v
+    join recipes r
+      on r.id = v.recipe_id
+     and r.deleted_at is null
+     and r.is_published = true
+    join app_users u on u.id = v.user_id
+    left join (
+      select variant_id, count(*)::int as vote_count
+      from recipe_variant_votes
+      group by variant_id
+    ) votes on votes.variant_id = v.id
+    left join recipe_variant_votes rv
+      on rv.variant_id = v.id
+     and rv.user_id = ${userId}::uuid
+    where v.id = ${variantId}::uuid
+      and v.deleted_at is null
+      and v.is_published = true
+    limit 1
+  `;
+
+  if (rows.length === 0) {
+    return json({ error: "Receta no encontrada" }, 404);
+  }
+
+  return json(mapVariantRow(rows[0]), 200);
 }
 
 // Lista variantes asociadas a una receta principal, ordenadas por votos.
@@ -320,45 +390,41 @@ async function listRecipeVariants(req, parentRecipeId) {
 
   const rows = await sql`
     select
-      r.id::text as id,
-      r.author_id::text as author_id,
+      v.id::text as id,
+      v.user_id::text as author_id,
       u.username as author,
-      r.title,
-      r.description,
-      r.time_minutes,
-      parent_r.image_url,
-      r.categories,
-      r.ingredients,
-      r.steps,
-      r.parent_recipe_id::text as parent_recipe_id,
-      r.created_at,
-      coalesce(v.vote_count, 0)::int as votes,
-      case when rs.user_id is null then false else true end as saved,
+      v.title,
+      v.description,
+      v.time_minutes,
+      r.image_url,
+      v.categories,
+      v.ingredients,
+      v.steps,
+      v.recipe_id::text as parent_recipe_id,
+      v.created_at,
+      coalesce(votes.vote_count, 0)::int as votes,
       case when rv.user_id is null then false else true end as voted
-    from recipes r
-    join recipes parent_r
-      on parent_r.id = r.parent_recipe_id
-     and parent_r.deleted_at is null
-     and parent_r.is_published = true
-    join app_users u on u.id = r.author_id
+    from recipe_variants v
+    join recipes r
+      on r.id = v.recipe_id
+     and r.deleted_at is null
+     and r.is_published = true
+    join app_users u on u.id = v.user_id
     left join (
-      select recipe_id, count(*)::int as vote_count
-      from recipe_votes
-      group by recipe_id
-    ) v on v.recipe_id = r.id
-    left join recipe_saves rs
-      on rs.recipe_id = r.id
-     and rs.user_id = ${userId}::uuid
-    left join recipe_votes rv
-      on rv.recipe_id = r.id
+      select variant_id, count(*)::int as vote_count
+      from recipe_variant_votes
+      group by variant_id
+    ) votes on votes.variant_id = v.id
+    left join recipe_variant_votes rv
+      on rv.variant_id = v.id
      and rv.user_id = ${userId}::uuid
-    where r.deleted_at is null
-      and r.is_published = true
-      and r.parent_recipe_id = ${parsedId.data}::uuid
-    order by coalesce(v.vote_count, 0) desc, r.created_at desc
+    where v.recipe_id = ${parsedId.data}::uuid
+      and v.deleted_at is null
+      and v.is_published = true
+    order by coalesce(votes.vote_count, 0) desc, v.created_at desc
   `;
 
-  return json(rows.map(mapRecipeRow), 200);
+  return json(rows.map(mapVariantRow), 200);
 }
 
 // Lista todas las recetas publicadas para vistas que necesitan filtros completos.
@@ -435,22 +501,9 @@ async function createRecipe(req) {
     : await parseJsonRecipe(req);
 
   if (payload.parentRecipeId) {
-    const parentRows = await sql`
-      select id
-      from recipes
-      where id = ${payload.parentRecipeId}::uuid
-        and deleted_at is null
-        and is_published = true
-        and parent_recipe_id is null
-      limit 1
-    `;
-
-    if (parentRows.length === 0) {
-      throw new HttpError("Receta original no encontrada para crear la variante", 404);
-    }
+    return createRecipeVariant(user, payload);
   }
 
-  // Las variantes conservan image_url a null y heredan la imagen de la receta original al consultarse.
   const rows = await sql`
     insert into recipes (
       author_id,
@@ -462,7 +515,6 @@ async function createRecipe(req) {
       categories,
       ingredients,
       steps,
-      parent_recipe_id,
       is_published
     )
     values (
@@ -471,11 +523,10 @@ async function createRecipe(req) {
       ${payload.description},
       ${payload.timeMinutes ?? null},
       ${payload.difficulty ?? null},
-      ${payload.parentRecipeId ? null : payload.imageUrl ?? null},
+      ${payload.imageUrl ?? null},
       ${JSON.stringify(payload.categories)}::jsonb,
       ${JSON.stringify(payload.ingredients)}::jsonb,
       ${JSON.stringify(payload.steps)}::jsonb,
-      ${payload.parentRecipeId ?? null}::uuid,
       true
     )
     returning
@@ -488,7 +539,6 @@ async function createRecipe(req) {
       categories,
       ingredients,
       steps,
-      parent_recipe_id::text as parent_recipe_id,
       created_at
   `;
 
@@ -501,6 +551,71 @@ async function createRecipe(req) {
   });
 
   return json(recipe, 201);
+}
+
+// Crea una variante asociada a una receta original sin duplicar imagen.
+async function createRecipeVariant(user, payload) {
+  const parentRows = await sql`
+    select id, image_url
+    from recipes
+    where id = ${payload.parentRecipeId}::uuid
+      and deleted_at is null
+      and is_published = true
+      and parent_recipe_id is null
+    limit 1
+  `;
+
+  if (parentRows.length === 0) {
+    throw new HttpError("Receta original no encontrada para crear la variante", 404);
+  }
+
+  const rows = await sql`
+    with inserted as (
+      insert into recipe_variants (
+        recipe_id,
+        user_id,
+        title,
+        description,
+        time_minutes,
+        categories,
+        ingredients,
+        steps,
+        is_published
+      )
+      values (
+        ${payload.parentRecipeId}::uuid,
+        ${user.id}::uuid,
+        ${payload.title},
+        ${payload.description},
+        ${payload.timeMinutes ?? null},
+        ${JSON.stringify(payload.categories)}::jsonb,
+        ${JSON.stringify(payload.ingredients)}::jsonb,
+        ${JSON.stringify(payload.steps)}::jsonb,
+        true
+      )
+      returning
+        id::text as id,
+        recipe_id::text as parent_recipe_id,
+        user_id::text as author_id,
+        title,
+        description,
+        time_minutes,
+        categories,
+        ingredients,
+        steps,
+        created_at
+    )
+    select
+      inserted.*,
+      ${user.username} as author,
+      r.image_url,
+      0::int as votes,
+      false as voted
+    from inserted
+    join recipes r on r.id = inserted.parent_recipe_id::uuid
+  `;
+
+  return json(mapVariantRow(rows[0]), 201);
 }
 
 // Elimina lógicamente una receta propia.

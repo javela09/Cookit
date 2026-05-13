@@ -667,7 +667,6 @@ body.userPage main .container {
 }
 
 .shareActions .shareButton {
-  min-height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

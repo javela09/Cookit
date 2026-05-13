@@ -564,14 +564,36 @@
         recipe.voted = Boolean(result.voted);
         recipe.votes = Number(result.votes || 0);
       }
-      const variant = state.variants.find(item => item.id === recipeId);
+      renderAll();
+    } catch (error) {
+      alert(error.message || "No se pudo actualizar el voto");
+    }
+  }
+
+  // Alterna el voto de una variante y actualiza el contador local.
+  async function voteVariant(variantId) {
+    if (!requireUser()) return;
+
+    try {
+      const result = await window.api("/api/recipe-variant-votes", {
+        method: "POST",
+        body: JSON.stringify({ variantId })
+      });
+
+      const current = getRecipeById(variantId);
+      if (current) {
+        current.voted = Boolean(result.voted);
+        current.votes = Number(result.votes || 0);
+      }
+
+      const variant = state.variants.find(item => item.id === variantId);
       if (variant) {
         variant.voted = Boolean(result.voted);
         variant.votes = Number(result.votes || 0);
       }
       renderAll();
     } catch (error) {
-      alert(error.message || "No se pudo actualizar el voto");
+      alert(error.message || "No se pudo actualizar el voto de la variante");
     }
   }
 
@@ -759,7 +781,11 @@
     if (voteBtn) {
       voteBtn.textContent = recipe.voted ? "Retirar voto" : "Votar";
       voteBtn.onclick = async () => {
-        await voteRecipe(recipe.id);
+        if (recipe.isVariant) {
+          await voteVariant(recipe.id);
+        } else {
+          await voteRecipe(recipe.id);
+        }
       };
     }
 
