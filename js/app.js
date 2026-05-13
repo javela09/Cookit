@@ -397,7 +397,7 @@
         <div class="recipeMedia" ${mediaStyle} aria-hidden="true"></div>
         <div class="cardInfo">
           <h3>${recipe.title}</h3>
-          <p class="author">por ${recipe.author}</p>
+          <p class="author">${recipe.author}</p>
           <p class="description">${recipe.description}</p>
           <div class="cardMeta">
             <span>Publicada el ${formatDate(recipe.date)}</span>
@@ -461,7 +461,7 @@
       article.innerHTML = `
         <div class="tileMedia" ${mediaStyle} aria-hidden="true"></div>
         <h3>${recipe.title}</h3>
-        <p class="tileAuthor">por ${recipe.author}</p>
+        <p class="tileAuthor">${recipe.author}</p>
         <p class="tileDescription">${recipe.description}</p>
         <div class="tileMeta">
           <span>${formatDate(recipe.date)}</span>
@@ -753,6 +753,10 @@
 
     if (!recipe) {
       detail.innerHTML = "<p>No se encontro la receta.</p>";
+      const variantsSection = document.querySelector(".recipeVariants");
+      const commentsSection = document.querySelector(".recipeComments");
+      if (variantsSection) variantsSection.hidden = true;
+      if (commentsSection) commentsSection.hidden = true;
       const commentsList = document.getElementById("commentsList");
       if (commentsList) commentsList.innerHTML = "<p>No hay comentarios para mostrar.</p>";
       return null;
@@ -770,6 +774,12 @@
     const voteBtn = document.getElementById("detailVoteButton");
     const voteCountEl = document.getElementById("detailVoteCount");
     const newVariantBtn = document.getElementById("newVariantButton");
+    const variantsSection = document.querySelector(".recipeVariants");
+    const commentsSection = document.querySelector(".recipeComments");
+    const isVariant = Boolean(recipe.isVariant);
+
+    if (variantsSection) variantsSection.hidden = isVariant;
+    if (commentsSection) commentsSection.hidden = isVariant;
 
     if (titleEl) titleEl.textContent = recipe.title;
     if (descEl) descEl.textContent = recipe.description;
@@ -796,10 +806,13 @@
     });
 
     if (newVariantBtn) {
-      const parentRecipeId = getParentRecipeId(recipe);
-      newVariantBtn.href = parentRecipeId
-        ? `newrecipe.html?variantOf=${encodeURIComponent(parentRecipeId)}`
-        : "newrecipe.html";
+      newVariantBtn.hidden = isVariant;
+      if (!isVariant) {
+        const parentRecipeId = getParentRecipeId(recipe);
+        newVariantBtn.href = parentRecipeId
+          ? `newrecipe.html?variantOf=${encodeURIComponent(parentRecipeId)}`
+          : "newrecipe.html";
+      }
     }
 
     if (tagsEl) {
@@ -861,7 +874,17 @@
     const container = document.getElementById("recipeVariantsList");
     if (!container) return;
 
+    const section = document.querySelector(".recipeVariants");
     const recipe = getRecipeById(getCurrentRecipeId());
+
+    if (recipe?.isVariant) {
+      if (section) section.hidden = true;
+      container.innerHTML = "";
+      return;
+    }
+
+    if (section) section.hidden = false;
+
     const variants = [...state.variants]
       .filter(variant => !recipe || variant.id !== recipe.id)
       .sort((a, b) => (b.votes || 0) - (a.votes || 0));
@@ -1001,6 +1024,24 @@
       replyBtn.textContent = "Responder";
       actions.appendChild(replyBtn);
 
+      if (comment.canEdit) {
+        const editBtn = document.createElement("button");
+        editBtn.type = "button";
+        editBtn.className = "secondaryButton commentActionBtn";
+        editBtn.dataset.commentAction = "edit";
+        editBtn.dataset.commentId = comment.id;
+        editBtn.textContent = "Editar";
+        actions.appendChild(editBtn);
+
+        const deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "dangerButton commentActionBtn";
+        deleteBtn.dataset.commentAction = "delete";
+        deleteBtn.dataset.commentId = comment.id;
+        deleteBtn.textContent = "Eliminar";
+        actions.appendChild(deleteBtn);
+      }
+
       const reportBtn = document.createElement("button");
       reportBtn.type = "button";
       reportBtn.className = "reportButton commentActionBtn";
@@ -1008,24 +1049,6 @@
       reportBtn.dataset.commentId = comment.id;
       reportBtn.textContent = "Reportar";
       actions.appendChild(reportBtn);
-    }
-
-    if (comment.canEdit) {
-      const editBtn = document.createElement("button");
-      editBtn.type = "button";
-      editBtn.className = "secondaryButton commentActionBtn";
-      editBtn.dataset.commentAction = "edit";
-      editBtn.dataset.commentId = comment.id;
-      editBtn.textContent = "Editar";
-      actions.appendChild(editBtn);
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.type = "button";
-      deleteBtn.className = "dangerButton commentActionBtn";
-      deleteBtn.dataset.commentAction = "delete";
-      deleteBtn.dataset.commentId = comment.id;
-      deleteBtn.textContent = "Eliminar";
-      actions.appendChild(deleteBtn);
     }
 
     if (actions.children.length > 0) {
@@ -1054,6 +1077,16 @@
     const list = document.getElementById("commentsList");
     if (!list) return;
 
+    const section = document.querySelector(".recipeComments");
+    const recipe = getRecipeById(getCurrentRecipeId());
+
+    if (recipe?.isVariant) {
+      if (section) section.hidden = true;
+      list.innerHTML = "";
+      return;
+    }
+
+    if (section) section.hidden = false;
     list.innerHTML = "";
 
     if (!state.comments.length) {
@@ -1129,6 +1162,12 @@
 
       if (!recipeId) {
         showCommentFeedback("No se pudo identificar la receta", true);
+        return;
+      }
+
+      const recipe = getRecipeById(recipeId);
+      if (recipe?.isVariant) {
+        showCommentFeedback("Las variantes no tienen comentarios propios.", true);
         return;
       }
 
@@ -1440,7 +1479,15 @@
     }
 
     const baseRecipe = state.variantBaseRecipe;
+    if (baseRecipe?.isVariant) {
+      if (lead) lead.textContent = "No se puede crear una variante de otra variante. Vuelve a la receta original para crearla.";
+      if (submitBtn) submitBtn.disabled = true;
+      return;
+    }
+
     if (!baseRecipe || form.dataset.variantPrefilled) return;
+
+    if (submitBtn) submitBtn.disabled = false;
 
     const titleField = document.getElementById("newTitle");
     const timeField = document.getElementById("newTime");
@@ -1483,6 +1530,11 @@
       const imageFile = document.getElementById("newImage")?.files?.[0] || null;
       const variantOfId = getVariantOfId();
       const isVariant = Boolean(variantOfId);
+
+      if (isVariant && state.variantBaseRecipe?.isVariant) {
+        alert("No se puede crear una variante de otra variante. Vuelve a la receta original para crearla.");
+        return;
+      }
 
       const timeMinutes = Number.parseInt(timeRaw, 10);
 
@@ -1581,8 +1633,9 @@
         await loadRecipes();
       }
 
-      if (isRecipeDetailPage() && recipeId && getRecipeById(recipeId)) {
-        await loadRecipeVariants(getParentRecipeId(getRecipeById(recipeId)));
+      const detailRecipe = getRecipeById(recipeId);
+      if (isRecipeDetailPage() && recipeId && detailRecipe && !detailRecipe.isVariant) {
+        await loadRecipeVariants(detailRecipe.id);
         await loadComments(recipeId);
       }
     }
