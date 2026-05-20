@@ -14,7 +14,7 @@
   <!-- Cabecera general -->
   <header>
     <div class="container">
-      <a href="index.html"><img class="headerLogo" src="img/cookitLogoH.png" alt="Logotipo de Cookit" decoding="async"></a>
+      <div class="headerBrand"><img class="headerLogo" src="img/cookitLogoH.png" alt="Logotipo de Cookit" decoding="async"></div>
       <nav class="navBar">
         <a href="index.html">Inicio</a>
         <a href="recipes.html">Recetas</a>
@@ -28,7 +28,7 @@
     <div class="container">
       <section class="userPanel">
         <div class="userInfo">
-          <h2 id="newRecipeTitle">Nueva receta</h2>
+          <h1 id="newRecipeTitle">Nueva receta</h1>
           <p class="sectionLead" id="newRecipeLead">Completa todos los campos para publicar tu receta.</p>
           <form class="newRecipeForm" id="newRecipeForm">
             <div class="formField full">
@@ -47,8 +47,8 @@
               <label for="newImage">Imagen de la receta</label>
               <input id="newImage" type="file" accept="image/*" required>
             </div>
-            <div class="formField full">
-              <label>Categorías</label>
+            <fieldset class="formField full categoryField">
+              <legend>Categorías</legend>
               <div class="checkboxGroup" id="newCategories">
                 <!--<label><input type="checkbox" value="rapidas"> Rápidas</label>
                 <label><input type="checkbox" value="vegetarianas"> Vegetarianas</label>
@@ -63,7 +63,7 @@
                 <label><input type="checkbox" value="postres"> Postres</label>
                 <label><input type="checkbox" value="condimentos_salsas"> Condimentos/Salsas</label>
               </div>
-            </div>
+            </fieldset>
             <div class="formField full">
               <label for="newIngredients">Ingredientes (uno por línea)</label>
               <textarea id="newIngredients" required placeholder="Ingrediente 1&#10;Ingrediente 2&#10;Ingrediente 3"></textarea>
@@ -85,14 +85,14 @@
   <footer>
     <div class="container">
       <div class="footerLegalInfo">
-        <h4>Informacion Legal</h4>
+        <p class="footerSectionTitle">Informacion Legal</p>
         <ul>
           <li><a href="">FAQS</a></li>
           <li><a href="">Aviso Legal</a></li>
         </ul>
       </div>
       <div class="footerContactInfo">
-        <h4>Contacto</h4>
+        <p class="footerSectionTitle">Contacto</p>
         <ul>
           <li><a href="">info@cookit.com</a></li>
           <li><a href="">+34 666554433</a></li>

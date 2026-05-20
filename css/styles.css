@@ -50,11 +50,24 @@ main section {
   /*box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);*/
 }
 
+main h1,
 main h2 {
   font-family: var(--font-primary);
   font-size: var(--font-subtitle);
   margin: 0 0 0.25rem 0;
   color: var(--color-text2);
+}
+
+.visuallyHidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .sectionLead {
@@ -491,10 +504,15 @@ body.userPage main .container {
   gap: 0.35rem;
 }
 
-.formField label {
+.formField label,
+.formField legend {
   font-family: var(--font-secondary);
   font-size: 0.95rem;
   color: #4a4a4a;
+}
+
+.formField legend {
+  padding: 0;
 }
 
 .formField input {
@@ -635,7 +653,7 @@ body.userPage main .container {
   gap: 1rem;
 }
 
-.detailLists h4 {
+.detailLists h2 {
   margin: 0 0 0.35rem 0;
   font-family: var(--font-primary);
   font-size: 1.2rem;
@@ -712,7 +730,7 @@ body.userPage main .container {
   border-bottom: 1px solid var(--color-text3);
 }
 
-.recipeVariants h3 {
+.recipeVariants h2 {
   margin: 0;
   font-family: var(--font-primary);
   font-size: 1.4rem;
@@ -728,7 +746,7 @@ body.userPage main .container {
   gap: 1rem;
 }
 
-.recipeComments h3 {
+.recipeComments h2 {
   margin: 0;
   font-family: var(--font-primary);
   font-size: 1.4rem;
@@ -879,6 +897,13 @@ body.userPage main .container {
   grid-column: 1 / span 12;
 }
 
+.newRecipeForm fieldset.formField {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-inline-size: 0;
+}
+
 .newRecipeForm textarea {
   min-height: 110px;
   padding: 0.65rem 0.85rem;
@@ -919,7 +944,8 @@ body.userPage main .container {
 
 /*---------------------- HEADER ---------------------------*/
 
-header > .container > a {
+header > .container > a,
+header > .container > .headerBrand {
   grid-column: 1 / span 4;
 }
 
@@ -1022,6 +1048,16 @@ footer .imgSection img {
   margin-left: auto;
 }
 
+.footerSectionTitle {
+  display: block;
+  margin-block-start: 1.33em;
+  margin-block-end: 1.33em;
+  margin-inline-start: 0;
+  margin-inline-end: 0;
+  font-size: 1em;
+  font-weight: bold;
+}
+
 .footerCredits {
 	background-color: #F8F8F8;
 	text-align: center;
@@ -1044,6 +1080,7 @@ footer .imgSection img {
   }
 
   header > .container > a,
+  header > .container > .headerBrand,
   .navBar,
   .bestValued,
   .news,
@@ -1074,7 +1111,8 @@ footer .imgSection img {
     row-gap: 1rem;
   }
 
-  header > .container > a {
+  header > .container > a,
+  header > .container > .headerBrand {
     display: flex;
     justify-content: center;
   }

@@ -14,7 +14,7 @@
   <!-- Cabecera general -->
   <header>
     <div class="container">
-      <a href="index.html"><img class="headerLogo" src="img/cookitLogoH.png" alt="Logotipo de Cookit" decoding="async"></a>
+      <div class="headerBrand"><img class="headerLogo" src="img/cookitLogoH.png" alt="Logotipo de Cookit" decoding="async"></div>
       <nav class="navBar">
         <a href="index.html">Inicio</a>
         <a href="recipes.html">Recetas</a>
@@ -30,7 +30,7 @@
         <div class="detailMedia" id="detailMedia" aria-hidden="true"></div>
         <div class="detailContent">
           <div class="detailMainInfo">
-            <h2 id="detailTitle">Titulo de receta</h2>
+            <h1 id="detailTitle">Titulo de receta</h1>
             <p class="sectionLead" id="detailDescription">Descripcion breve de la receta.</p>
             <div class="detailMetaRow">
               <span id="detailAuthor"></span>
@@ -41,11 +41,11 @@
           </div>
           <div class="detailLists">
             <div>
-              <h4>Ingredientes</h4>
+              <h2>Ingredientes</h2>
               <ul id="detailIngredients"></ul>
             </div>
             <div>
-              <h4>Pasos</h4>
+              <h2>Pasos</h2>
               <ol id="detailSteps"></ol>
             </div>
           </div>
@@ -65,14 +65,14 @@
       </section>
       <section class="recipeVariants" aria-labelledby="variantsTitle">
         <div class="sectionHeader">
-          <h3 id="variantsTitle">Variantes</h3>
+          <h2 id="variantsTitle">Variantes</h2>
           <a class="primaryButton" id="newVariantButton" href="newrecipe.html">Nueva variante</a>
           <p class="sectionLead">Versiones asociadas a esta receta, ordenadas por popularidad.</p>
         </div>
         <div class="recipesScroller" id="recipeVariantsList"></div>
       </section>
       <section class="recipeComments" aria-labelledby="commentsTitle">
-        <h3 id="commentsTitle">Comentarios</h3>
+        <h2 id="commentsTitle">Comentarios</h2>
         <form class="commentForm" id="mainCommentForm">
           <label for="mainCommentInput">Escribe un comentario</label>
           <textarea
@@ -95,14 +95,14 @@
   <footer>
     <div class="container">
       <div class="footerLegalInfo">
-        <h4>Informacion Legal</h4>
+        <p class="footerSectionTitle">Informacion Legal</p>
         <ul>
           <li><a href="">FAQS</a></li>
           <li><a href="">Aviso Legal</a></li>
         </ul>
       </div>
       <div class="footerContactInfo">
-        <h4>Contacto</h4>
+        <p class="footerSectionTitle">Contacto</p>
         <ul>
           <li><a href="">info@cookit.com</a></li>
           <li><a href="">+34 666554433</a></li>
