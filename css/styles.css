@@ -101,10 +101,6 @@ main h2 {
   align-items: stretch;
 }
 
-.recipeCard:hover {
-  cursor: pointer;
-}
-
 .recipeMedia {
   grid-column: 1 / span 4;
   background: radial-gradient(circle at 30% 30%, #f3f7ea, #dbe5c1);
@@ -113,6 +109,12 @@ main h2 {
   min-height: 180px;
   background-size: cover;
   background-position: center;
+}
+
+.recipeImageLink {
+  display: block;
+  cursor: pointer;
+  text-decoration: none;
 }
 
 .cardInfo {
@@ -183,6 +185,12 @@ main h2 {
   border-radius: 0;
 }
 
+.newsItemLink {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
 .newsItem h3 {
   margin: 0 0 0.35rem 0;
   font-family: var(--font-primary);
@@ -195,6 +203,38 @@ main h2 {
   font-family: var(--font-secondary);
   font-size: 0.95rem;
   color: #333;
+}
+
+.newsDemo {
+  grid-column: 1 / span 12;
+}
+
+.newsDemoGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.newsDemoItem {
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #d9e0c4;
+}
+
+.newsDemoItem h2 {
+  font-size: 1.35rem;
+}
+
+.newsDemoItem p,
+.newsDemoItem li {
+  font-family: var(--font-secondary);
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.newsDemoItem ul {
+  margin: 0.75rem 0 0 0;
+  padding-left: 1.2rem;
 }
 
 
@@ -323,10 +363,6 @@ main h2 {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.recipeTile:hover {
-  cursor: pointer;
 }
 
 .tileMedia {
@@ -484,7 +520,7 @@ body.userPage main .container {
 }
 
 .userInfo {
-  grid-column: 1 / span 12;
+  grid-column: 1 / span 5;
   /*padding: 1.5rem;*/
   /*background: #f8f8f8;*/
   border-radius: 0;
@@ -492,6 +528,48 @@ body.userPage main .container {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+}
+
+.userProfileImagePanel {
+  grid-column: 8 / span 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profileImageBox {
+  width: min(220px, 100%);
+  aspect-ratio: 1 / 1;
+  border: 1px solid #d9e0c4;
+  background: #f4f7ec;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  margin-inline: auto;
+}
+
+.profileImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profileImagePlaceholder {
+  font-family: var(--font-secondary);
+  font-size: 0.95rem;
+  color: #4a4a4a;
+}
+
+.profileImageForm {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.profileImageFeedback {
+  min-height: 1.2rem;
+  margin: 0;
+  font-family: var(--font-secondary);
+  font-size: 0.95rem;
 }
 
 .userPanel, .userRecipes {
@@ -1097,6 +1175,8 @@ footer .imgSection img {
   .detailMainInfo,
   .detailLists,
   .detailRecipeActions,
+  .userInfo,
+  .userProfileImagePanel,
   footer .footerLegalInfo,
   footer .footerContactInfo,
   footer .imgSection {
@@ -1147,6 +1227,10 @@ footer .imgSection img {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .newsDemoGrid {
+    grid-template-columns: 1fr;
+  }
+
   .recipeDetail {
     gap: 1.5rem;
   }
@@ -1165,6 +1249,13 @@ footer .imgSection img {
 
   .authForms {
     padding: 1.5rem;
+  }
+
+  .userProfileImagePanel {
+    border-left: 0;
+    border-top: 1px solid #d9e0c4;
+    padding-left: 0;
+    padding-top: 1rem;
   }
 
   .sectionHeader {

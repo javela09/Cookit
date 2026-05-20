@@ -47,7 +47,7 @@ export default async (req) => {
       update app_users
       set email = ${data.email}
       where id = ${user.id}
-      returning id, username, email
+      returning id, username, email, profile_image_url as "profileImage"
     `;
 
     return new Response(JSON.stringify(rows[0]), {

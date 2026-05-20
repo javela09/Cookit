@@ -47,7 +47,7 @@ export default async (req) => {
       returning id, username, email
     `;
 
-    return new Response(JSON.stringify(rows[0]), {
+    return new Response(JSON.stringify({ ...rows[0], profileImage: null }), {
       status: 201,
       headers: { "content-type": "application/json" }
     });

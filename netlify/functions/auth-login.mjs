@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { sql } from "./_lib/db.mjs";
-import { verifyPassword, createSessionToken } from "./_lib/auth.mjs";
+import { verifyPassword, createSessionToken, ensureAuthSchema } from "./_lib/auth.mjs";
 
 const schema = z.object({
   email: z.string().email(),
@@ -17,11 +17,18 @@ export default async (req) => {
   }
 
   try {
+    await ensureAuthSchema();
+
     const body = await req.json();
     const data = schema.parse(body);
 
     const users = await sql`
-      select id, username, email, password_hash
+      select
+        id,
+        username,
+        email,
+        password_hash,
+        profile_image_url as "profileImage"
       from app_users
       where email = ${data.email}
       limit 1
@@ -60,7 +67,8 @@ export default async (req) => {
       JSON.stringify({
         id: user.id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        profileImage: user.profileImage || null
       }),
       {
         status: 200,

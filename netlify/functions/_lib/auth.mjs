@@ -2,6 +2,50 @@ import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
 import { sql } from "./db.mjs";
 
+let authSchemaReadyPromise = null;
+
+// Garantiza campos opcionales de usuario sin romper cuentas existentes.
+async function ensureAuthSchemaInternal() {
+  const tableRows = await sql`
+    select exists(
+      select 1
+      from information_schema.tables
+      where table_schema = 'public'
+        and table_name = 'app_users'
+    ) as exists
+  `;
+
+  if (!tableRows[0]?.exists) return;
+
+  const columnRows = await sql`
+    select exists(
+      select 1
+      from information_schema.columns
+      where table_schema = 'public'
+        and table_name = 'app_users'
+        and column_name = 'profile_image_url'
+    ) as exists
+  `;
+
+  if (!columnRows[0]?.exists) {
+    await sql`
+      alter table app_users
+      add column profile_image_url text null
+    `;
+  }
+}
+
+export async function ensureAuthSchema() {
+  if (!authSchemaReadyPromise) {
+    authSchemaReadyPromise = ensureAuthSchemaInternal().catch(error => {
+      authSchemaReadyPromise = null;
+      throw error;
+    });
+  }
+
+  return authSchemaReadyPromise;
+}
+
 // Genera el hash seguro de una contraseña.
 export async function hashPassword(password) {
   return bcrypt.hash(password, 10);
@@ -40,8 +84,14 @@ export async function getCurrentUser(req) {
 
   if (!token) return null;
 
+  await ensureAuthSchema();
+
   const rows = await sql`
-    select u.id, u.username, u.email
+    select
+      u.id,
+      u.username,
+      u.email,
+      u.profile_image_url as "profileImage"
     from user_sessions s
     join app_users u on u.id = s.user_id
     where s.session_token = ${token}

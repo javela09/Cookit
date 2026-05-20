@@ -45,6 +45,22 @@
             <button class="primaryButton smallButton" id="updatePassword">Guardar contraseña</button>
           </div>
         </div>
+        <div class="userProfileImagePanel">
+          <h2>Imagen de perfil</h2>
+          <p class="sectionLead">Añade o reemplaza tu imagen desde tu panel de usuario.</p>
+          <div class="profileImageBox">
+            <img id="profileImage" class="profileImage" alt="Imagen de perfil del usuario" hidden>
+            <div id="profileImagePlaceholder" class="profileImagePlaceholder">Sin imagen</div>
+          </div>
+          <form class="profileImageForm" id="profileImageForm">
+            <div class="formField">
+              <label for="profileImageInput">Seleccionar imagen</label>
+              <input id="profileImageInput" type="file" accept="image/*">
+            </div>
+            <button class="secondaryButton smallButton" id="profileImageSubmit" type="submit">Añadir imagen</button>
+          </form>
+          <p id="profileImageFeedback" class="profileImageFeedback" aria-live="polite"></p>
+        </div>
       </section>
 
       <section class="userRecipes">

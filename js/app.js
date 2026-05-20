@@ -169,6 +169,17 @@
     });
   }
 
+  // Actualiza la imagen de perfil reutilizando el envio multipart de recetas.
+  async function updateUserProfileImage(file) {
+    const payload = new FormData();
+    payload.append("imageFile", file);
+
+    return window.api("/api/user/profile-image", {
+      method: "PUT",
+      body: payload
+    });
+  }
+
   // Inicializa el estado local de sesión.
   async function initSession() {
     const user = await loadCurrentUser();
@@ -176,7 +187,8 @@
       ? {
           id: user.id,
           username: user.username,
-          email: user.email
+          email: user.email,
+          profileImage: user.profileImage || user.profile_image_url || null
         }
       : null;
   }
@@ -365,7 +377,12 @@
 
   // Navega al detalle de una receta.
   function goToDetail(id) {
-    window.location.href = `recipe.html?id=${encodeURIComponent(id)}`;
+    window.location.href = getRecipeDetailHref(id);
+  }
+
+  // Construye la ruta de detalle reutilizada por enlaces y navegación programática.
+  function getRecipeDetailHref(id) {
+    return `recipe.html?id=${encodeURIComponent(id)}`;
   }
 
   // Obtiene la receta principal a la que debe asociarse una variante.
@@ -394,7 +411,9 @@
       article.className = "recipeCard";
       const mediaStyle = recipe.image ? `style="background-image:url('${recipe.image}')"` : "";
       article.innerHTML = `
-        <div class="recipeMedia" ${mediaStyle} aria-hidden="true"></div>
+        <a class="recipeMedia recipeImageLink" href="${getRecipeDetailHref(recipe.id)}" ${mediaStyle}>
+          <span class="visuallyHidden">Ver detalle de ${recipe.title}</span>
+        </a>
         <div class="cardInfo">
           <h3>${recipe.title}</h3>
           <p class="author">${recipe.author}</p>
@@ -404,7 +423,6 @@
             <span class="votes">${recipe.votes || 0} votos</span>
           </div>
         </div>`;
-      article.addEventListener("click", () => goToDetail(recipe.id));
       container.appendChild(article);
     });
   }
@@ -459,7 +477,9 @@
       article.className = "recipeTile";
       const mediaStyle = recipe.image ? `style="background-image:url('${recipe.image}')"` : "";
       article.innerHTML = `
-        <div class="tileMedia" ${mediaStyle} aria-hidden="true"></div>
+        <a class="tileMedia recipeImageLink" href="${getRecipeDetailHref(recipe.id)}" ${mediaStyle}>
+          <span class="visuallyHidden">Ver detalle de ${recipe.title}</span>
+        </a>
         <h3>${recipe.title}</h3>
         <p class="tileAuthor">${recipe.author}</p>
         <p class="tileDescription">${recipe.description}</p>
@@ -471,11 +491,6 @@
           <button class="secondaryButton" data-action="save">${recipe.saved ? "Guardado" : "Guardar"}</button>
           <button class="ghostButton" data-action="vote">${recipe.voted ? "Retirar voto" : "Votar"}</button>
         </div>`;
-
-      article.addEventListener("click", event => {
-        if (event.target.closest("button")) return;
-        goToDetail(recipe.id);
-      });
 
       article.querySelector("[data-action='save']").addEventListener("click", async event => {
         event.stopPropagation();
@@ -634,7 +649,9 @@
     card.className = "userRecipeCard";
     const mediaStyle = recipe.image ? `style="background-image:url('${recipe.image}')"` : "";
     card.innerHTML = `
-      <div class="tileMedia" ${mediaStyle} aria-hidden="true"></div>
+      <a class="tileMedia recipeImageLink" href="${getRecipeDetailHref(recipe.id)}" ${mediaStyle}>
+        <span class="visuallyHidden">Ver detalle de ${recipe.title}</span>
+      </a>
       <h3>${recipe.title}</h3>
       <p class="tileAuthor">${isMine ? "Publicado por ti" : `de ${recipe.author}`}</p>
       <p class="tileDescription">${recipe.description}</p>
@@ -646,7 +663,6 @@
         <button class="dangerButton">${isMine ? "Eliminar publicacion" : "Eliminar de guardadas"}</button>
       </div>`;
 
-    card.addEventListener("click", () => goToDetail(recipe.id));
     card.querySelector(".dangerButton").addEventListener("click", async event => {
       event.stopPropagation();
       if (isMine) {
@@ -665,9 +681,27 @@
     const savedContainer = document.getElementById("savedRecipes");
     const usernameField = document.getElementById("usernameField");
     const emailField = document.getElementById("emailField");
+    const profileImage = document.getElementById("profileImage");
+    const profilePlaceholder = document.getElementById("profileImagePlaceholder");
+    const profileSubmit = document.getElementById("profileImageSubmit");
 
     if (usernameField) usernameField.value = state.user ? state.user.username : "";
     if (emailField) emailField.value = state.user ? state.user.email : "";
+    if (profileImage) {
+      if (state.user?.profileImage) {
+        profileImage.hidden = false;
+        profileImage.src = state.user.profileImage;
+      } else {
+        profileImage.hidden = true;
+        profileImage.removeAttribute("src");
+      }
+    }
+    if (profilePlaceholder) {
+      profilePlaceholder.hidden = Boolean(state.user?.profileImage);
+    }
+    if (profileSubmit) {
+      profileSubmit.textContent = state.user?.profileImage ? "Reemplazar imagen" : "Añadir imagen";
+    }
     if (!myContainer || !savedContainer || !state.user) return;
 
     const myRecipes = state.recipes.filter(recipe => recipe.authorId === state.user.id);
@@ -856,7 +890,9 @@
     card.className = "userRecipeCard";
     const mediaStyle = recipe.image ? `style="background-image:url('${recipe.image}')"` : "";
     card.innerHTML = `
-      <div class="tileMedia" ${mediaStyle} aria-hidden="true"></div>
+      <a class="tileMedia recipeImageLink" href="${getRecipeDetailHref(recipe.id)}" ${mediaStyle}>
+        <span class="visuallyHidden">Ver detalle de ${recipe.title}</span>
+      </a>
       <h3>${recipe.title}</h3>
       <p class="tileAuthor">de ${recipe.author}</p>
       <p class="tileDescription">${recipe.description}</p>
@@ -865,7 +901,6 @@
         <span class="votes">${recipe.votes || 0} votos</span>
       </div>`;
 
-    card.addEventListener("click", () => goToDetail(recipe.id));
     return card;
   }
 
@@ -1312,6 +1347,8 @@
     const updatePasswordBtn = document.getElementById("updatePassword");
     const emailField = document.getElementById("emailField");
     const passwordField = document.getElementById("passwordField");
+    const profileImageForm = document.getElementById("profileImageForm");
+    const profileImageInput = document.getElementById("profileImageInput");
 
     if (updateEmailBtn && emailField && !updateEmailBtn.dataset.bound) {
       updateEmailBtn.dataset.bound = "1";
@@ -1326,7 +1363,11 @@
 
         try {
           const user = await updateUserEmail(nextEmail);
-          state.user = { ...state.user, email: user.email };
+          state.user = {
+            ...state.user,
+            email: user.email,
+            profileImage: user.profileImage || user.profile_image_url || state.user.profileImage || null
+          };
           alert("Correo actualizado");
         } catch (error) {
           alert(error.message || "No se pudo actualizar el correo");
@@ -1353,6 +1394,49 @@
           alert(error.message || "No se pudo actualizar la contrasena");
         }
       };
+    }
+
+    if (profileImageForm && profileImageInput && !profileImageForm.dataset.bound) {
+      profileImageForm.dataset.bound = "1";
+      profileImageForm.addEventListener("submit", async event => {
+        event.preventDefault();
+        if (!requireUser()) return;
+
+        const imageFile = profileImageInput.files?.[0] || null;
+
+        if (!imageFile) {
+          showProfileImageFeedback("Selecciona una imagen");
+          return;
+        }
+
+        if (!imageFile.type || !imageFile.type.startsWith("image/")) {
+          showProfileImageFeedback("El archivo debe ser una imagen valida");
+          return;
+        }
+
+        if (imageFile.size > MAX_IMAGE_SIZE_BYTES) {
+          showProfileImageFeedback("La imagen no puede superar 3MB");
+          return;
+        }
+
+        const submitBtn = document.getElementById("profileImageSubmit");
+        if (submitBtn) submitBtn.disabled = true;
+
+        try {
+          const user = await updateUserProfileImage(imageFile);
+          state.user = {
+            ...state.user,
+            profileImage: user.profileImage || user.profile_image_url || null
+          };
+          profileImageInput.value = "";
+          showProfileImageFeedback("Imagen de perfil actualizada", false);
+          renderUserLists();
+        } catch (error) {
+          showProfileImageFeedback(error.message || "No se pudo actualizar la imagen");
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
+      });
     }
   }
 
@@ -1394,6 +1478,14 @@
     feedback.textContent = message;
   }
 
+  // Muestra mensajes del formulario de imagen de perfil.
+  function showProfileImageFeedback(message, isError = true) {
+    const feedback = document.getElementById("profileImageFeedback");
+    if (!feedback) return;
+    feedback.style.color = isError ? "#7b1e1e" : "#2f3a18";
+    feedback.textContent = message;
+  }
+
   // Gestiona el estado visual de la página de autenticación.
   function renderAuthPage() {
     const title = document.getElementById("authTitle");
@@ -1422,7 +1514,8 @@
       state.user = {
         id: user.id,
         username: user.username,
-        email: user.email
+        email: user.email,
+        profileImage: user.profileImage || user.profile_image_url || null
       };
 
       showAuthFeedback("Login correcto, entrando...", false);

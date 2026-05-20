@@ -10,6 +10,7 @@
     user: "local_user",
     session: "local_session"
   };
+  const MAX_IMAGE_SIZE_BYTES = 3 * 1024 * 1024;
 
   function read(key, fallback) {
     try {
@@ -36,9 +37,17 @@
     throw error;
   }
 
+  function normalizeUser(user) {
+    if (!user) return null;
+    return {
+      ...user,
+      profileImage: user.profileImage || null
+    };
+  }
+
   function getUser() {
     if (window.localStorage.getItem(KEYS.session) !== "1") return null;
-    return read(KEYS.user, null);
+    return normalizeUser(read(KEYS.user, null));
   }
 
   function requireUser() {
@@ -86,6 +95,27 @@
       reader.onerror = () => resolve(null);
       reader.readAsDataURL(file);
     });
+  }
+
+  async function readImageFile(options) {
+    if (!(options.body instanceof FormData)) {
+      apiError("La imagen debe enviarse como multipart/form-data", 400);
+    }
+
+    const file = options.body.get("imageFile") || options.body.get("profileImageFile");
+    if (!file) {
+      apiError("Selecciona una imagen", 400);
+    }
+
+    if (!file.type || !file.type.startsWith("image/")) {
+      apiError("El archivo debe ser una imagen valida", 400);
+    }
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      apiError("La imagen no puede superar 3MB", 400);
+    }
+
+    return readFileAsDataUrl(file);
   }
 
   async function readRecipeBody(options) {
@@ -187,14 +217,15 @@
 
   function ensureLocalUser(body = {}) {
     const existing = read(KEYS.user, null);
-    if (existing) return existing;
+    if (existing) return normalizeUser(existing);
 
     const email = String(body.email || "local@cookit.test").trim();
     const username = String(body.username || email.split("@")[0] || "usuario-local").trim();
     const user = {
       id: makeId(),
       username,
-      email
+      email,
+      profileImage: null
     };
     write(KEYS.user, user);
     return user;
@@ -221,13 +252,13 @@
     apiError("Metodo no permitido", 405);
   }
 
-  function handleUser(path, method, options) {
+  async function handleUser(path, method, options) {
     if (method !== "PUT") apiError("Metodo no permitido", 405);
 
     const user = requireUser();
-    const body = readJsonBody(options);
 
     if (path === "/api/user/email") {
+      const body = readJsonBody(options);
       const nextUser = { ...user, email: String(body.email || "").trim() };
       write(KEYS.user, nextUser);
       return nextUser;
@@ -235,6 +266,13 @@
 
     if (path === "/api/user/password") {
       return { ok: true };
+    }
+
+    if (path === "/api/user/profile-image") {
+      const imageUrl = await readImageFile(options);
+      const nextUser = { ...user, profileImage: imageUrl };
+      write(KEYS.user, nextUser);
+      return nextUser;
     }
 
     apiError("Endpoint local no implementado", 404);
@@ -526,7 +564,7 @@
     }
 
     if (url.pathname.startsWith("/api/user/")) {
-      return handleUser(url.pathname, method, options);
+      return await handleUser(url.pathname, method, options);
     }
 
     if (url.pathname === "/api/recipes") {
