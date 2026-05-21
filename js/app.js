@@ -325,6 +325,48 @@
   }
 
   // Añade el menú flotante de logout al botón de usuario.
+  // Crea el boton responsive que despliega la navegacion en movil.
+  function bindMobileNavToggle() {
+    const nav = document.querySelector(".navBar");
+    if (!nav || nav.dataset.mobileToggleBound) return;
+
+    nav.dataset.mobileToggleBound = "1";
+    if (!nav.id) nav.id = "mainNav";
+
+    const toggle = document.createElement("button");
+    toggle.className = "navToggleButton";
+    toggle.type = "button";
+    toggle.setAttribute("aria-controls", nav.id);
+    toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Abrir menu");
+    toggle.innerHTML = '<span aria-hidden="true"></span><span aria-hidden="true"></span><span aria-hidden="true"></span>';
+
+    nav.parentNode.insertBefore(toggle, nav);
+
+    const closeMenu = () => {
+      nav.classList.remove("isOpen");
+      toggle.setAttribute("aria-expanded", "false");
+      toggle.setAttribute("aria-label", "Abrir menu");
+    };
+
+    toggle.addEventListener("click", event => {
+      event.stopPropagation();
+      const isOpen = nav.classList.toggle("isOpen");
+      toggle.setAttribute("aria-expanded", String(isOpen));
+      toggle.setAttribute("aria-label", isOpen ? "Cerrar menu" : "Abrir menu");
+    });
+
+    nav.addEventListener("click", event => {
+      if (event.target.closest("a, button")) closeMenu();
+    });
+
+    document.addEventListener("click", event => {
+      if (!nav.classList.contains("isOpen")) return;
+      if (nav.contains(event.target) || toggle.contains(event.target)) return;
+      closeMenu();
+    });
+  }
+
   function attachLogoutMenu(btn) {
     let menu = document.getElementById("logoutMenu");
     if (!menu) {
@@ -1711,6 +1753,7 @@
     bindNewRecipeForm();
     bindMainCommentForm();
     bindCommentsListInteractions();
+    bindMobileNavToggle();
 
     if (!isLoginPage() && state.user) {
       const recipeId = getCurrentRecipeId();

@@ -1057,6 +1057,10 @@ header > .container > .headerBrand {
   text-align: right;
 }
 
+.navToggleButton {
+  display: none;
+}
+
 .navTextButton,
 .navBar a {
   padding: 0;
@@ -1304,14 +1308,53 @@ footer .imgSection img {
     row-gap: 0.75rem;
   }
 
+  header > .container > a,
+  header > .container > .headerBrand {
+    grid-column: 1 / span 9;
+    justify-content: flex-start;
+  }
+
   .navBar {
+    grid-column: 1 / -1;
+    display: none;
     grid-template-columns: 1fr;
     gap: 0.5rem;
+  }
+
+  .navBar.isOpen {
+    display: grid;
+  }
+
+  .navToggleButton {
+    grid-column: 10 / span 3;
+    display: inline-flex;
+    width: 44px;
+    height: 44px;
+    min-height: 44px;
+    padding: 0.65rem;
+    border: 1px solid #9aac6e;
+    background: #eaf0dc;
+    color: #374428;
+    cursor: pointer;
+    justify-self: end;
+    align-self: center;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .navToggleButton span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: #374428;
   }
 
   .navTextButton,
   .navBar a {
     font-size: 1.35rem;
+    text-align: center;
   }
 
   .recipeCard {
