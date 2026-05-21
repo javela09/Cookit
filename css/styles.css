@@ -209,32 +209,38 @@ main h2 {
   grid-column: 1 / span 12;
 }
 
-.newsDemoGrid {
+.newsDemoArticle {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 1rem;
+  gap: 1.25rem;
 }
 
-.newsDemoItem {
-  padding: 1rem;
-  background: #fff;
+.newsDemoPhoto {
+  margin: 0;
+  display: flex;
+  justify-content: center;
   border: 1px solid #d9e0c4;
+  background: #f4f7ec;
+  padding: 2rem;
 }
 
-.newsDemoItem h2 {
-  font-size: 1.35rem;
+.newsDemoPhoto img {
+  display: block;
+  width: min(100%, 760px);
+  height: auto;
+  object-fit: contain;
 }
 
-.newsDemoItem p,
-.newsDemoItem li {
+.newsDemoBody {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.newsDemoBody p {
+  margin: 0 0 1rem 0;
   font-family: var(--font-secondary);
-  font-size: 0.95rem;
+  font-size: 1rem;
   color: #333;
-}
-
-.newsDemoItem ul {
-  margin: 0.75rem 0 0 0;
-  padding-left: 1.2rem;
+  line-height: 1.6;
 }
 
 
@@ -532,6 +538,14 @@ body.userPage main .container {
 
 .userProfileImagePanel {
   grid-column: 8 / span 5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.recipeForm {
+  grid-column: 1 / span 12;
+  border-radius: 0;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -1225,10 +1239,6 @@ footer .imgSection img {
 
   .recipesGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .newsDemoGrid {
-    grid-template-columns: 1fr;
   }
 
   .recipeDetail {

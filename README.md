@@ -1,6 +1,6 @@
 # Cookit
 
-Aplicacion web estatica de recetas.
+Aplicacion web colaborativa de recetas.
 
 ## Ejecucion local
 
