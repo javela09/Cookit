@@ -22,6 +22,7 @@ header {
 
 html {
   scrollbar-gutter: stable;
+  height: 100%;
 }
 
 main {
@@ -432,6 +433,7 @@ main h2 {
 .pageIndicators {
   display: flex;
   gap: 0.5rem;
+  height: 100%;
 }
 
 .pageBtn {
@@ -446,8 +448,8 @@ main h2 {
 
 .pageBtn.active {
   background: #eaf0dc;
-  border-color: #9aac6e;
   font-weight: 700;
+  cursor: auto;
 }
 
 .loginHeader .container {
