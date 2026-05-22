@@ -181,7 +181,7 @@ main h2 {
 .newsItem {
   padding: 1rem;
   background: #fff;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   border-radius: 0;
 }
 
@@ -218,7 +218,7 @@ main h2 {
   margin: 0;
   display: flex;
   justify-content: center;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   background: #f4f7ec;
   padding: 2rem;
 }
@@ -286,7 +286,7 @@ main h2 {
   width: 100%;
   padding: 0.65rem 0.85rem;
   border-radius: 0;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
   background-color: #fff;
@@ -363,7 +363,7 @@ main h2 {
 
 .recipeTile {
   background: #fff;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   border-radius: 0;
   padding: 1rem;
   display: flex;
@@ -441,7 +441,7 @@ main h2 {
 .pageBtn {
   min-width: 2.25rem;
   padding: 0.45rem;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   background: #fff;
   border-radius: 0;
   font-family: var(--font-secondary);
@@ -554,7 +554,7 @@ body.userPage main .container {
 .profileImageBox {
   width: min(220px, 100%);
   aspect-ratio: 1 / 1;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   background: #f4f7ec;
   display: grid;
   place-items: center;
@@ -610,7 +610,7 @@ body.userPage main .container {
 .formField input {
   padding: 0.65rem 0.85rem;
   border-radius: 0;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
   background: #fff;
@@ -639,7 +639,7 @@ body.userPage main .container {
 
 .userRecipeCard {
   background: #fff;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   border-radius: 0;
   padding: 1rem;
   display: flex;
@@ -690,8 +690,8 @@ body.userPage main .container {
 .detailMedia {
   grid-column: 1 / span 5;
   border-radius: 0;
-  background: linear-gradient(135deg, #f4f7ec, #dbe4c5);
-  border: 1px solid #d9e0c4;
+  background-color: var(--color-text2);
+  border: 1px solid var(--color-text2);
   aspect-ratio: 1 / 1;
   min-height: 260px;
   background-size: cover;
@@ -732,7 +732,7 @@ body.userPage main .container {
   padding: 0.2rem 0.6rem;
   border-radius: 0;
   background: #eaf0dc;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.85rem;
 }
@@ -862,7 +862,7 @@ body.userPage main .container {
   min-height: 110px;
   padding: 0.65rem 0.85rem;
   border-radius: 0;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
   background: #fff;
@@ -897,13 +897,13 @@ body.userPage main .container {
   grid-template-columns: 1fr;
   gap: 0.5rem;
   padding: 0.9rem;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   background: #fff;
 }
 
 .commentItem.isReply {
   margin-left: 1.25rem;
-  border-left: 3px solid #d9e0c4;
+  border-left: 3px solid var(--color-text2);
 }
 
 .commentItem.isDeleted {
@@ -1000,7 +1000,7 @@ body.userPage main .container {
   min-height: 110px;
   padding: 0.65rem 0.85rem;
   border-radius: 0;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
   background: #fff;
@@ -1082,7 +1082,7 @@ a {
 .logoutMenu {
   position: absolute;
   background: #fff;
-  border: 1px solid #d9e0c4;
+  border: 1px solid var(--color-text2);
   border-radius: 0;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
   padding: 0.25rem;
@@ -1267,7 +1267,7 @@ footer .imgSection img {
 
   .userProfileImagePanel {
     border-left: 0;
-    border-top: 1px solid #d9e0c4;
+    border-top: 1px solid var(--color-text2);
     padding-left: 0;
     padding-top: 1rem;
   }
