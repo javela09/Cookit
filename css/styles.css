@@ -96,15 +96,13 @@ main h2 {
   gap: 1rem;
   padding: 1.25rem;
   background: #fff;
-  border: 1px solid #e3e8d6;
+  border: 1px solid var(--color-text2);
   border-radius: 0;
   align-items: stretch;
 }
 
 .recipeMedia {
   grid-column: 1 / span 4;
-  background: radial-gradient(circle at 30% 30%, #f3f7ea, #dbe5c1);
-  border: 1px solid #dfe7c8;
   border-radius: 0;
   min-height: 180px;
   background-size: cover;
@@ -165,7 +163,7 @@ main h2 {
 
 .news {
   grid-column: 9 / span 4;
-  border-left: 3px solid #e3e8d6;
+  border-left: 3px solid var(--color-text3);
   padding-left: 2rem;
   display: grid;
   grid-template-columns: 1fr;
@@ -343,7 +341,7 @@ main h2 {
   border-radius: 0;
   border: 1px solid var(--color-text2);
   background: transparent;
-  color: #506021;
+  color: var(--color-text2);
   font-family: var(--font-secondary);
   font-weight: 600;
   cursor: pointer;
@@ -691,7 +689,6 @@ body.userPage main .container {
   grid-column: 1 / span 5;
   border-radius: 0;
   background-color: var(--color-text2);
-  border: 1px solid var(--color-text2);
   aspect-ratio: 1 / 1;
   min-height: 260px;
   background-size: cover;
