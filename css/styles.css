@@ -98,7 +98,7 @@ main h2 {
   padding: 0.5rem;
   background: #fff;
   border: 1px solid var(--color-text2);
-  border-radius: 0;
+  border-radius: 5px;
   align-items: stretch;
 }
 
@@ -181,7 +181,7 @@ main h2 {
   padding: 1rem;
   background: #fff;
   border: 1px solid var(--color-text2);
-  border-radius: 0;
+  border-radius: 5px;
 }
 
 .newsItemLink {
@@ -218,6 +218,7 @@ main h2 {
   display: flex;
   justify-content: center;
   border: 1px solid var(--color-text2);
+  border-radius: 5px;
   background: #f4f7ec;
   padding: 2rem;
 }
@@ -284,7 +285,7 @@ main h2 {
 .filtersBar select {
   width: 100%;
   padding: 0.65rem 0.85rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
@@ -307,7 +308,7 @@ main h2 {
 .primaryButton {
   padding: 0.75rem 1.1rem;
   border: none;
-  border-radius: 0;
+  border-radius: 5px;
   background-color: var(--color-text2);
   color: #fff;
   font-family: var(--font-secondary);
@@ -323,7 +324,7 @@ main h2 {
 
 .secondaryButton {
   padding: 0.6rem 1rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid var(--color-text2);
   background: #eaf0dc;
   color: #2f3a18;
@@ -339,7 +340,7 @@ main h2 {
 
 .ghostButton {
   padding: 0.6rem 1rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid var(--color-text2);
   background: transparent;
   color: var(--color-text2);
@@ -363,7 +364,7 @@ main h2 {
 .recipeTile {
   background: #fff;
   border: 1px solid var(--color-text2);
-  border-radius: 0;
+  border-radius: 5px;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -441,7 +442,7 @@ main h2 {
   padding: 0.45rem;
   border: 1px solid var(--color-text2);
   background: #fff;
-  border-radius: 0;
+  border-radius: 5px;
   font-family: var(--font-secondary);
   cursor: pointer;
 }
@@ -553,6 +554,7 @@ body.userPage main .container {
   width: min(220px, 100%);
   aspect-ratio: 1 / 1;
   border: 1px solid var(--color-text2);
+  border-radius: 5px;
   background: #f4f7ec;
   display: grid;
   place-items: center;
@@ -607,7 +609,7 @@ body.userPage main .container {
 
 .formField input {
   padding: 0.65rem 0.85rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
@@ -638,7 +640,7 @@ body.userPage main .container {
 .userRecipeCard {
   background: #fff;
   border: 1px solid var(--color-text2);
-  border-radius: 0;
+  border-radius: 5px;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
@@ -647,7 +649,7 @@ body.userPage main .container {
 
 .dangerButton {
   padding: 0.6rem 1rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid #c75b5b;
   background: #f9e3e3;
   color: #7b1e1e;
@@ -663,7 +665,7 @@ body.userPage main .container {
 
 .reportButton {
   padding: 0.6rem 1rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid #c75b5b;
   background: #fff5f5;
   color: #9b1c1c;
@@ -727,7 +729,7 @@ body.userPage main .container {
 
 .tag {
   padding: 0.2rem 0.6rem;
-  border-radius: 0;
+  border-radius: 5px;
   background: #eaf0dc;
   border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
@@ -783,6 +785,7 @@ body.userPage main .container {
   justify-content: center;
   padding: 0.6rem 1rem;
   border: 1px solid var(--color-text2);
+  border-radius: 5px;
   font-family: var(--font-secondary);
   font-weight: 600;
   line-height: 1;
@@ -858,7 +861,7 @@ body.userPage main .container {
 .inlineCommentForm textarea {
   min-height: 110px;
   padding: 0.65rem 0.85rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
@@ -895,12 +898,14 @@ body.userPage main .container {
   gap: 0.5rem;
   padding: 0.9rem;
   border: 1px solid var(--color-text2);
+  border-radius: 5px;
   background: #fff;
 }
 
 .commentItem.isReply {
   margin-left: 1.25rem;
   border-left: 3px solid var(--color-text2);
+  border-radius: 5px;
 }
 
 .commentItem.isDeleted {
@@ -954,6 +959,7 @@ body.userPage main .container {
   gap: 0.5rem;
   padding: 0.75rem;
   border: 1px dashed #cbd7ad;
+  border-radius: 5px;
   background: #f8fbf0;
 }
 
@@ -996,7 +1002,7 @@ body.userPage main .container {
 .newRecipeForm textarea {
   min-height: 110px;
   padding: 0.65rem 0.85rem;
-  border-radius: 0;
+  border-radius: 5px;
   border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-size: 0.95rem;
@@ -1080,7 +1086,7 @@ a {
   position: absolute;
   background: #fff;
   border: 1px solid var(--color-text2);
-  border-radius: 0;
+  border-radius: 5px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
   padding: 0.25rem;
   display: none;
@@ -1096,6 +1102,7 @@ a {
   padding: 0.5rem 0.75rem;
   width: 100%;
   border: none;
+  border-radius: 5px;
   background: transparent;
   font-family: var(--font-secondary);
   font-size: 1rem;
@@ -1330,6 +1337,7 @@ footer .imgSection img {
     min-height: 44px;
     padding: 0.65rem;
     border: 1px solid #9aac6e;
+    border-radius: 5px;
     background: #eaf0dc;
     color: #374428;
     cursor: pointer;
