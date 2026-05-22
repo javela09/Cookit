@@ -309,7 +309,7 @@ main h2 {
   padding: 0.75rem 1.1rem;
   border: none;
   border-radius: 0;
-  background: linear-gradient(135deg, #8ba74d, #6f8743);
+  background-color: var(--color-text2);
   color: #fff;
   font-family: var(--font-secondary);
   font-weight: 700;
@@ -325,7 +325,7 @@ main h2 {
 .secondaryButton {
   padding: 0.6rem 1rem;
   border-radius: 0;
-  border: 1px solid #9aac6e;
+  border: 1px solid var(--color-text2);
   background: #eaf0dc;
   color: #2f3a18;
   font-family: var(--font-secondary);
@@ -341,7 +341,7 @@ main h2 {
 .ghostButton {
   padding: 0.6rem 1rem;
   border-radius: 0;
-  border: 1px solid #9aac6e;
+  border: 1px solid var(--color-text2);
   background: transparent;
   color: #506021;
   font-family: var(--font-secondary);
@@ -785,7 +785,7 @@ body.userPage main .container {
   align-items: center;
   justify-content: center;
   padding: 0.6rem 1rem;
-  border: 1px solid #9aac6e;
+  border: 1px solid var(--color-text2);
   font-family: var(--font-secondary);
   font-weight: 600;
   line-height: 1;
