@@ -94,7 +94,7 @@ main h2 {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 1rem;
-  padding: 1.25rem;
+  padding: 0.5rem;
   background: #fff;
   border: 1px solid var(--color-text2);
   border-radius: 0;
@@ -363,7 +363,7 @@ main h2 {
   background: #fff;
   border: 1px solid var(--color-text2);
   border-radius: 0;
-  padding: 1rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -373,8 +373,6 @@ main h2 {
   width: 100%;
   aspect-ratio: 4 / 3;
   border-radius: 0;
-  background: linear-gradient(145deg, #f4f7ec, #dbe4c5);
-  border: 1px solid #d9e0c4;
   background-size: cover;
   background-position: center;
 }
@@ -639,7 +637,7 @@ body.userPage main .container {
   background: #fff;
   border: 1px solid var(--color-text2);
   border-radius: 0;
-  padding: 1rem;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
